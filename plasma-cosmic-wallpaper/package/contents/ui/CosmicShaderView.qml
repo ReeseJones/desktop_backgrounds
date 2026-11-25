@@ -13,7 +13,7 @@ Item {
     property real starDensity: 1.0
     property real brightness: 1.0
     property real colorBalance: 0.0
-    property color colorBg: "#0b102e"
+    property color colorBg: "#06091c"
     property color colorPrimary: "#1038b8"
     property color colorSecondary: "#8c24e0"
     property color colorAccent: "#0ee8ff"
@@ -89,6 +89,14 @@ Item {
         cycleClock = initialCycleTime;
     }
 
+    onPausedChanged: {
+        if (paused && manualFadeAnim.running) {
+            manualFadeAnim.stop();
+            manualBaseIndex = manualNextIndex;
+            manualBlend = 0.0;
+        }
+    }
+
     onPresetChanged: {
         if (!_initialized) {
             manualBaseIndex = clampSceneIndex(preset);
@@ -114,7 +122,7 @@ Item {
                          : manualBaseIndex;
         _wasAuto = false;
 
-        if (targetIdx !== startIdx && slotBlend > 0.001) {
+        if (!root.paused && targetIdx !== startIdx && slotBlend > 0.001) {
             manualFadeAnim.stop();
             manualBaseIndex = startIdx;
             manualNextIndex = targetIdx;

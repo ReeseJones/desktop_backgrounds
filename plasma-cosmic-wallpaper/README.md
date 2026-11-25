@@ -15,7 +15,7 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
 - **Hold Duration** (`5–3600 s`, `360 s` default) and **Transition Blend** (`0–30 s`, `3 s` default) — unscaled wall-clock cycle timing independent of animation speed
 - **Color Palette** quick presets (*Cosmic Deep Blue*, *Ultraviolet Nebula*, *Emerald Abyss*, *Crimson Event*, *Arctic Aurora*, *Custom*)
 - **Base Colors** (shared `uColorBg`, `uColorPrimary`, `uColorSecondary`, `uColorAccent` uniforms across all three shaders, configurable via KDE color pickers):
-  - **Space Void** (`#0b102e` default)
+  - **Space Void** (`#06091c` default)
   - **Primary Glow** (`#1038b8` default)
   - **Secondary Glow** (`#8c24e0` default)
   - **Plasma Highlight** (`#0ee8ff` default)
@@ -31,6 +31,12 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
 
 ```bash
 ./scripts/install.sh
+```
+
+If upgrading while the wallpaper is already running in Plasma, pass `--reload` (or run `systemctl --user restart plasma-plasmashell`) so KDE reloads updated QML and KConfigXT schema keys immediately:
+
+```bash
+./scripts/install.sh --reload
 ```
 
 Then right-click your desktop → **Desktop and Wallpaper** → **Wallpaper type** → **Cosmic Space & Plasma**.

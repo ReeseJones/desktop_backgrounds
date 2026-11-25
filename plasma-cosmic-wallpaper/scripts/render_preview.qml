@@ -36,32 +36,41 @@ Window {
     }
 
     readonly property var defaultJobs: [
-        { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset0_nebula.png" },
-        { preset: 1, time: 18.0, cycleTime: 0.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset1_vortex.png" },
-        { preset: 2, time: 12.0, cycleTime: 0.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset2_aurora.png" }
+        { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset0_nebula.png" },
+        { preset: 1, time: 18.0, cycleTime: 0.0, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset1_vortex.png" },
+        { preset: 2, time: 12.0, cycleTime: 0.0, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset2_aurora.png" }
     ]
 
     readonly property var customJobs: [
-        { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#051916", primary: "#0b7268", secondary: "#1e4fa3", accent: "#3effc8", file: "preset0_emerald.png" },
-        { preset: 1, time: 18.0, cycleTime: 0.0, bg: "#180610", primary: "#96184a", secondary: "#5b1a99", accent: "#ff9e2c", file: "preset1_crimson.png" },
-        { preset: 2, time: 12.0, cycleTime: 0.0, bg: "#061428", primary: "#0f5298", secondary: "#248ea6", accent: "#6ef7ff", file: "preset2_arctic.png" }
+        { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#061c17", primary: "#0b7268", secondary: "#1e4fa3", accent: "#3effc8", file: "preset0_emerald.png" },
+        { preset: 1, time: 18.0, cycleTime: 0.0, bg: "#1c0713", primary: "#96184a", secondary: "#5b1a99", accent: "#ff9e2c", file: "preset1_crimson.png" },
+        { preset: 2, time: 12.0, cycleTime: 0.0, bg: "#06162b", primary: "#0f5298", secondary: "#248ea6", accent: "#6ef7ff", file: "preset2_arctic.png" }
+    ]
+
+    readonly property var voidTestJobs: [
+        { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#241042", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "voidtest0_violet_nebula.png" },
+        { preset: 1, time: 18.0, cycleTime: 0.0, bg: "#2e0d24", primary: "#96184a", secondary: "#5b1a99", accent: "#ff9e2c", file: "voidtest1_plum_vortex.png" },
+        { preset: 2, time: 12.0, cycleTime: 0.0, bg: "#0c362e", primary: "#0b7268", secondary: "#1e4fa3", accent: "#3effc8", file: "voidtest2_emerald_aurora.png" }
     ]
 
     readonly property var blendJobs: [
-        { preset: -1, time: 16.0, cycleTime: 361.5, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "blend0to1_nebula_vortex.png" },
-        { preset: -1, time: 16.0, cycleTime: 400.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "hold_scene1_vortex.png" },
-        { preset: -1, time: 16.0, cycleTime: 724.5, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "blend1to2_vortex_aurora.png" }
+        { preset: -1, time: 16.0, cycleTime: 361.5, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "blend0to1_nebula_vortex.png" },
+        { preset: -1, time: 16.0, cycleTime: 400.0, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "hold_scene1_vortex.png" },
+        { preset: -1, time: 16.0, cycleTime: 724.5, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "blend1to2_vortex_aurora.png" }
     ]
 
     readonly property var jobs: {
         if (paletteMode === "custom") {
             return customJobs;
         }
+        if (paletteMode === "voidtest") {
+            return voidTestJobs;
+        }
         if (paletteMode === "blend") {
             return blendJobs;
         }
         if (paletteMode === "all") {
-            return defaultJobs.concat(customJobs).concat(blendJobs);
+            return defaultJobs.concat(customJobs).concat(voidTestJobs).concat(blendJobs);
         }
         return defaultJobs;
     }

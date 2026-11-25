@@ -17,7 +17,15 @@ WallpaperItem {
 
     readonly property int currentPreset: Number(root.configuration.Preset ?? -1)
 
-    accentColor: root.configuration.ColorAccent ?? "#0ee8ff"
+    function configColor(val, fallback) {
+        if (val === undefined || val === null) {
+            return fallback;
+        }
+        const s = String(val);
+        return s.length > 0 ? val : fallback;
+    }
+
+    accentColor: configColor(root.configuration.ColorAccent, "#0ee8ff")
 
     contextualActions: [
         PlasmaCore.Action {
@@ -105,10 +113,10 @@ WallpaperItem {
         starDensity: Number(root.configuration.StarDensityPercent ?? 100) / 100.0
         brightness: Number(root.configuration.BrightnessPercent ?? 100) / 100.0
         colorBalance: Number(root.configuration.ColorBalance ?? 0) / 100.0
-        colorBg: root.configuration.ColorBackground ?? "#0b102e"
-        colorPrimary: root.configuration.ColorPrimary ?? "#1038b8"
-        colorSecondary: root.configuration.ColorSecondary ?? "#8c24e0"
-        colorAccent: root.configuration.ColorAccent ?? "#0ee8ff"
+        colorBg: root.configColor(root.configuration.ColorBackground, "#06091c")
+        colorPrimary: root.configColor(root.configuration.ColorPrimary, "#1038b8")
+        colorSecondary: root.configColor(root.configuration.ColorSecondary, "#8c24e0")
+        colorAccent: root.configColor(root.configuration.ColorAccent, "#0ee8ff")
         cycleHoldSeconds: Number(root.configuration.CycleHoldSeconds ?? 360)
         cycleBlendSeconds: Number(root.configuration.CycleBlendSeconds ?? 3)
         fpsLimit: Number(root.configuration.FpsLimit ?? 60)

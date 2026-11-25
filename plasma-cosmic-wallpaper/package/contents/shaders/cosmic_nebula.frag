@@ -158,13 +158,13 @@ void main() {
     float t = uTime * 0.042;
     float bal = clamp(uColorBalance, -1.0, 1.0);
 
-    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 bgCol = clamp(uColorBg.rgb, 0.0, 1.0);
     vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
 
-    // Subtle deep-space backdrop gradient
-    vec3 col = mix(bgCol * 0.45, bgCol * 1.15 + primaryCol * 0.03,
+    // Deep-space backdrop tinted directly by Space Void (uColorBg)
+    vec3 col = mix(bgCol * 0.72, bgCol * 1.25 + primaryCol * 0.025,
                    smoothstep(-0.7, 0.7, uv.y - uv.x * 0.25));
 
     // Align and gently curve the main cosmic nebula corridor diagonally
@@ -213,7 +213,7 @@ void main() {
     nebulaGas = mix(nebulaGas, electricCyan * 0.68, smoothstep(0.60, 0.90, cloudDetail) * 0.48 * (1.0 - max(bal, 0.0) * 0.45));
 
     col += nebulaGas * cloudBody * 0.86;
-    col *= 1.0 - 0.60 * dustMask;
+    col = mix(col, bgCol * 0.25, 0.58 * dustMask);
 
     // Luminous ionized plasma arcs & glowing filament cores
     vec3 filamentTint = mix(electricCyan, amethystGlow, clamp(0.28 + r.x * 0.45 + bal * 0.30, 0.0, 1.0));

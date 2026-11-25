@@ -36,7 +36,7 @@
     </entry>
     <entry name="ColorBackground" type="Color">
       <label>Space void background color</label>
-      <default>#0b102e</default>
+      <default>#06091c</default>
     </entry>
     <entry name="ColorPrimary" type="Color">
       <label>Primary nebula and plasma color</label>

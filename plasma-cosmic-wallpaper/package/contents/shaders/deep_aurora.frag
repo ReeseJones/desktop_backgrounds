@@ -197,14 +197,14 @@ void main() {
     float t = uTime * 0.32;
     float bal = clamp(uColorBalance, -1.0, 1.0);
 
-    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 bgCol = clamp(uColorBg.rgb, 0.0, 1.0);
     vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
 
-    // Deep tranquil midnight cosmos gradient
-    vec3 skyTop = bgCol * 0.32;
-    vec3 skyBot = bgCol * 0.95 + mix(primaryCol, secondaryCol, bal * 0.5 + 0.5) * 0.04;
+    // Deep cosmos backdrop tinted directly by Space Void (uColorBg)
+    vec3 skyTop = bgCol * 0.68;
+    vec3 skyBot = bgCol * 1.22 + mix(primaryCol, secondaryCol, bal * 0.5 + 0.5) * 0.03;
     vec3 col = mix(skyTop, skyBot, smoothstep(-0.55, 0.55, qt_TexCoord0.y - 0.5));
 
     // Faint diagonal cosmic Milky Way dust veil

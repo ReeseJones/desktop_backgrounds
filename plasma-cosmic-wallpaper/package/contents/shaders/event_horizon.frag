@@ -162,13 +162,13 @@ void main() {
     float rShadow = 0.165;
     float rPhoton = rShadow * 1.045;
 
-    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 bgCol = clamp(uColorBg.rgb, 0.0, 1.0);
     vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
     vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
 
     // Color palette derived from the 4 shared base colors + uColorBalance
-    vec3 deepVoid = bgCol * 0.38;
+    vec3 deepVoid = bgCol;
     vec3 sapphireCol = mix(primaryCol, mix(primaryCol, secondaryCol, 0.35), bal * 0.5 + 0.5);
     vec3 violetCol = mix(mix(primaryCol, secondaryCol, 0.5), secondaryCol, clamp(0.60 + bal * 0.40, 0.0, 1.0));
     vec3 cyanPlasma = mix(accentCol, mix(accentCol, primaryCol, 0.28), clamp(bal * 0.35 + 0.15, 0.0, 1.0));
@@ -179,7 +179,8 @@ void main() {
     vec2 outerSwirl = rot2(outerAngle) * tiltUV;
     float bgMist = fbm(outerSwirl * 2.6 + vec2(t * 0.04, -t * 0.03));
     float bgVeil = smoothstep(0.32, 0.86, bgMist) * exp(-rScreen * 0.95) * smoothstep(rShadow, rShadow + 0.28, rScreen);
-    vec3 col = deepVoid + mix(sapphireCol, violetCol, clamp(0.45 + bal * 0.35, 0.0, 1.0)) * bgVeil * 0.34;
+    vec3 col = mix(deepVoid * 0.78, deepVoid * 1.18, smoothstep(-0.6, 0.6, uv.y))
+             + mix(sapphireCol, violetCol, clamp(0.45 + bal * 0.35, 0.0, 1.0)) * bgVeil * 0.34;
 
     // Gravitationally deflected background starfield, masked cleanly inside the event horizon
     float starMask = smoothstep(rShadow + 0.004, rShadow + 0.024, rScreen);
@@ -257,7 +258,7 @@ void main() {
     col += photonCol * (1.0 - 0.92 * frontAlpha);
 
     // Composite luminous accretion disk plasma streams in front of the shadow on foreground half
-    col = mix(col, deepVoid * 0.4, frontAlpha * 0.55);
+    col = mix(col, vec3(0.0), frontAlpha * 0.55);
     col += diskColor * diskDensity * dopplerBoost * diskOcclusion * 1.48;
     col += mix(cyanPlasma, hotCore, 0.50) * iscoRing * dopplerBoost * diskOcclusion * 0.82;
 

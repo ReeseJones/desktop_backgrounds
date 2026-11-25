@@ -13,6 +13,8 @@ Kirigami.FormLayout {
     id: root
     twinFormLayouts: parentLayout
 
+    property var configDialog
+    property var wallpaperConfiguration
     property alias formLayout: root
 
     property int cfg_Preset: -1
@@ -29,13 +31,13 @@ Kirigami.FormLayout {
     property int cfg_BrightnessPercentDefault: 100
     property int cfg_ColorBalance: 0
     property int cfg_ColorBalanceDefault: 0
-    property alias cfg_ColorBackground: bgColorBtn.color
-    property color cfg_ColorBackgroundDefault: "#0b102e"
-    property alias cfg_ColorPrimary: primaryColorBtn.color
+    property color cfg_ColorBackground: "#06091c"
+    property color cfg_ColorBackgroundDefault: "#06091c"
+    property color cfg_ColorPrimary: "#1038b8"
     property color cfg_ColorPrimaryDefault: "#1038b8"
-    property alias cfg_ColorSecondary: secondaryColorBtn.color
+    property color cfg_ColorSecondary: "#8c24e0"
     property color cfg_ColorSecondaryDefault: "#8c24e0"
-    property alias cfg_ColorAccent: accentColorBtn.color
+    property color cfg_ColorAccent: "#0ee8ff"
     property color cfg_ColorAccentDefault: "#0ee8ff"
     property int cfg_FpsLimit: 60
     property int cfg_FpsLimitDefault: 60
@@ -52,7 +54,7 @@ Kirigami.FormLayout {
     readonly property var paletteModel: [
         {
             label: qsTr("Cosmic Deep Blue (Default)"),
-            bg: "#0b102e",
+            bg: "#06091c",
             primary: "#1038b8",
             secondary: "#8c24e0",
             accent: "#0ee8ff",
@@ -60,7 +62,7 @@ Kirigami.FormLayout {
         },
         {
             label: qsTr("Ultraviolet Nebula"),
-            bg: "#120826",
+            bg: "#120729",
             primary: "#3b1d8a",
             secondary: "#b829e6",
             accent: "#40d9ff",
@@ -68,7 +70,7 @@ Kirigami.FormLayout {
         },
         {
             label: qsTr("Emerald Abyss"),
-            bg: "#051916",
+            bg: "#061c17",
             primary: "#0b7268",
             secondary: "#1e4fa3",
             accent: "#3effc8",
@@ -76,7 +78,7 @@ Kirigami.FormLayout {
         },
         {
             label: qsTr("Crimson Event"),
-            bg: "#180610",
+            bg: "#1c0713",
             primary: "#96184a",
             secondary: "#5b1a99",
             accent: "#ff9e2c",
@@ -84,7 +86,7 @@ Kirigami.FormLayout {
         },
         {
             label: qsTr("Arctic Aurora"),
-            bg: "#061428",
+            bg: "#06162b",
             primary: "#0f5298",
             secondary: "#248ea6",
             accent: "#6ef7ff",
@@ -133,6 +135,21 @@ Kirigami.FormLayout {
         paletteCombo.currentIndex = paletteModel.length - 1;
     }
 
+    function syncColorButtons() {
+        if (!Qt.colorEqual(bgColorBtn.color, cfg_ColorBackground)) {
+            bgColorBtn.color = cfg_ColorBackground;
+        }
+        if (!Qt.colorEqual(primaryColorBtn.color, cfg_ColorPrimary)) {
+            primaryColorBtn.color = cfg_ColorPrimary;
+        }
+        if (!Qt.colorEqual(secondaryColorBtn.color, cfg_ColorSecondary)) {
+            secondaryColorBtn.color = cfg_ColorSecondary;
+        }
+        if (!Qt.colorEqual(accentColorBtn.color, cfg_ColorAccent)) {
+            accentColorBtn.color = cfg_ColorAccent;
+        }
+    }
+
     function syncFpsCombo() {
         for (let i = 0; i < fpsModel.length; ++i) {
             if (fpsModel[i].value === cfg_FpsLimit) {
@@ -163,12 +180,29 @@ Kirigami.FormLayout {
         return qsTr("%1 s").arg(s);
     }
 
+    Component.onCompleted: {
+        syncColorButtons();
+        syncColorPaletteCombo();
+    }
+
     onCfg_PresetChanged: syncPresetCombo()
     onCfg_FpsLimitChanged: syncFpsCombo()
-    onCfg_ColorBackgroundChanged: syncColorPaletteCombo()
-    onCfg_ColorPrimaryChanged: syncColorPaletteCombo()
-    onCfg_ColorSecondaryChanged: syncColorPaletteCombo()
-    onCfg_ColorAccentChanged: syncColorPaletteCombo()
+    onCfg_ColorBackgroundChanged: {
+        syncColorButtons();
+        syncColorPaletteCombo();
+    }
+    onCfg_ColorPrimaryChanged: {
+        syncColorButtons();
+        syncColorPaletteCombo();
+    }
+    onCfg_ColorSecondaryChanged: {
+        syncColorButtons();
+        syncColorPaletteCombo();
+    }
+    onCfg_ColorAccentChanged: {
+        syncColorButtons();
+        syncColorPaletteCombo();
+    }
 
     ColumnLayout {
         Kirigami.FormData.label: qsTr("Preview:")
@@ -313,10 +347,16 @@ Kirigami.FormLayout {
                 id: bgColorBtn
                 showAlphaChannel: false
                 dialogTitle: qsTr("Select Space Void Color")
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.text: root.cfg_ColorBackground.toString()
+                onAccepted: (acceptedColor) => {
+                    root.cfg_ColorBackground = acceptedColor;
+                }
             }
 
             QQC2.Label {
-                text: qsTr("Space Void")
+                text: qsTr("Space Void (%1)").arg(root.cfg_ColorBackground.toString())
                 Layout.fillWidth: true
             }
         }
@@ -329,10 +369,16 @@ Kirigami.FormLayout {
                 id: primaryColorBtn
                 showAlphaChannel: false
                 dialogTitle: qsTr("Select Primary Glow Color")
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.text: root.cfg_ColorPrimary.toString()
+                onAccepted: (acceptedColor) => {
+                    root.cfg_ColorPrimary = acceptedColor;
+                }
             }
 
             QQC2.Label {
-                text: qsTr("Primary Glow")
+                text: qsTr("Primary Glow (%1)").arg(root.cfg_ColorPrimary.toString())
                 Layout.fillWidth: true
             }
         }
@@ -345,10 +391,16 @@ Kirigami.FormLayout {
                 id: secondaryColorBtn
                 showAlphaChannel: false
                 dialogTitle: qsTr("Select Secondary Glow Color")
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.text: root.cfg_ColorSecondary.toString()
+                onAccepted: (acceptedColor) => {
+                    root.cfg_ColorSecondary = acceptedColor;
+                }
             }
 
             QQC2.Label {
-                text: qsTr("Secondary Glow")
+                text: qsTr("Secondary Glow (%1)").arg(root.cfg_ColorSecondary.toString())
                 Layout.fillWidth: true
             }
         }
@@ -361,10 +413,16 @@ Kirigami.FormLayout {
                 id: accentColorBtn
                 showAlphaChannel: false
                 dialogTitle: qsTr("Select Plasma Highlight Color")
+                QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                QQC2.ToolTip.visible: hovered
+                QQC2.ToolTip.text: root.cfg_ColorAccent.toString()
+                onAccepted: (acceptedColor) => {
+                    root.cfg_ColorAccent = acceptedColor;
+                }
             }
 
             QQC2.Label {
-                text: qsTr("Plasma Highlight")
+                text: qsTr("Plasma Highlight (%1)").arg(root.cfg_ColorAccent.toString())
                 Layout.fillWidth: true
             }
         }
