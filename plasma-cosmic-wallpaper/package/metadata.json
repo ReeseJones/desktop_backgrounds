@@ -1,0 +1,20 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "reesedrjones@gmail.com",
+                "Name": "Reese Jones"
+            }
+        ],
+        "Category": "",
+        "Description": "Native GPU-accelerated deep-space nebula, relativistic plasma vortex, and cosmic aurora shaders in deep blue, violet, and cyan.",
+        "Icon": "preferences-desktop-wallpaper",
+        "Id": "com.reesedrjones.cosmicspace",
+        "License": "GPL-3.0-or-later",
+        "Name": "Cosmic Space & Plasma",
+        "Version": "1.0.0"
+    },
+    "Keywords": "space,nebula,plasma,aurora,vortex,shader,blue,purple,cyan",
+    "X-KDE-ParentApp": "org.kde.plasmashell"
+}

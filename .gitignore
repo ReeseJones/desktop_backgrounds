@@ -1,0 +1,9 @@
+# Compiled Qt 6 shader binaries (built by qsb via scripts/build.sh)
+*.qsb
+
+# Local preview renders
+plasma-cosmic-wallpaper/previews/
+
+# OS / editor noise
+.DS_Store
+*~

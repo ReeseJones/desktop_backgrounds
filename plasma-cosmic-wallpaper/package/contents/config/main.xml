@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+
+  <group name="General">
+    <entry name="Preset" type="Int">
+      <label>Cosmic shader preset (0: Cosmic Plasma Nebula, 1: Event Horizon Vortex, 2: Deep-Space Plasma Aurora)</label>
+      <default>0</default>
+    </entry>
+    <entry name="SpeedPercent" type="Int">
+      <label>Animation speed percentage (0 to 200)</label>
+      <default>75</default>
+    </entry>
+    <entry name="StarDensityPercent" type="Int">
+      <label>Starfield density percentage (20 to 200)</label>
+      <default>100</default>
+    </entry>
+    <entry name="BrightnessPercent" type="Int">
+      <label>Shader brightness percentage (50 to 150)</label>
+      <default>100</default>
+    </entry>
+    <entry name="ColorBalance" type="Int">
+      <label>Color balance (-100 deep blue/cyan to +100 purple/violet)</label>
+      <default>0</default>
+    </entry>
+    <entry name="FpsLimit" type="Int">
+      <label>Frame rate cap (30, 60, or 0 for VSync)</label>
+      <default>60</default>
+    </entry>
+    <entry name="PauseWhenMaximized" type="Bool">
+      <label>Pause wallpaper animation when a window on this screen is maximized or fullscreen</label>
+      <default>true</default>
+    </entry>
+  </group>
+</kcfg>
