@@ -1,6 +1,12 @@
 # Compiled Qt 6 shader binaries (built by qsb via scripts/build.sh)
 *.qsb
 
+# Release packages and local store metadata
+dist/
+*.tar.gz
+*.sha256
+.kde-store.env
+
 # Local preview renders
 plasma-cosmic-wallpaper/previews/
 

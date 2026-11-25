@@ -23,3 +23,15 @@ Then select **Cosmic Space & Plasma** in **Desktop and Wallpaper** settings, or 
 ```bash
 ./scripts/apply.sh --preset auto
 ```
+
+#### Packaging & Publishing (KDE Store / GitHub Releases)
+
+Build a cross-Qt6 KDE Store archive (`dist/com.reesedrjones.cosmicspace-<version>.tar.gz`) or cut a tagged release:
+
+```bash
+cd plasma-cosmic-wallpaper
+./scripts/package.sh --screenshots
+./scripts/release.sh patch --open
+```
+
+See [docs/PUBLISHING.md](docs/PUBLISHING.md) for version management and KDE Store publishing steps.

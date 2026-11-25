@@ -1,0 +1,61 @@
+name: Release Plasma Wallpaper
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 shader baker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-shader-baker
+
+      - name: Verify metadata version matches tag
+        id: meta
+        run: |
+          VERSION="$(python3 -c 'import json; print(json.load(open("plasma-cosmic-wallpaper/package/metadata.json"))["KPlugin"]["Version"])')"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.ref_type }}" == "tag" && "${{ github.ref_name }}" != "v${VERSION}" ]]; then
+            echo "::error::Git tag '${{ github.ref_name }}' does not match metadata.json Version '${VERSION}'"
+            exit 1
+          fi
+
+      - name: Build and package KDE Store archive
+        run: |
+          ./plasma-cosmic-wallpaper/scripts/package.sh
+          ls -lh dist/
+
+      - name: Upload workflow build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-space-wallpaper-${{ steps.meta.outputs.version }}
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+
+      - name: Create or update GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.tar.gz dist/*.sha256 --clobber
+          else
+            gh release create "$TAG" dist/*.tar.gz dist/*.sha256 \
+              --title "Cosmic Space & Plasma $TAG" \
+              --generate-notes
+          fi

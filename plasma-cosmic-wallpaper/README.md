@@ -46,3 +46,16 @@ Or apply it from a terminal in your active Plasma session:
 ```bash
 ./scripts/apply.sh --preset auto
 ```
+
+## Packaging & Releases
+
+- Build a cross-distro KDE Store archive (pre-baked with QSB v8 for Qt 6.5–6.12+) and optional gallery screenshots:
+  ```bash
+  ./scripts/package.sh --screenshots
+  ```
+- Bump `metadata.json` version, package, tag, push to GitHub Releases CI, and open the KDE Store upload page:
+  ```bash
+  ./scripts/release.sh patch --open
+  ```
+
+See [../docs/PUBLISHING.md](../docs/PUBLISHING.md) for details.
