@@ -35,3 +35,11 @@ cd plasma-cosmic-wallpaper
 ```
 
 See [docs/PUBLISHING.md](docs/PUBLISHING.md) for version management and KDE Store publishing steps.
+
+## Credits & Acknowledgments
+
+Built with AI assistance using classic procedural graphics techniques:
+- *Hash without Sine* (`hash12` / `hash22`) by **Dave Hoskins** (MIT License)
+- Analytical ACES filmic tone-mapping fit by **Krzysztof Narkowicz**
+- Double domain-warped and 3-4-5 rotated-octave FBM techniques popularized by **Inigo Quilez**
+- Quintic smoothstep interpolation and ridged multifractal noise (**Ken Perlin** / **F. Kenton Musgrave**)

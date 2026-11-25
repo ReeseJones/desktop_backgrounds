@@ -59,3 +59,11 @@ Or apply it from a terminal in your active Plasma session:
   ```
 
 See [../docs/PUBLISHING.md](../docs/PUBLISHING.md) for details.
+
+## Credits & Acknowledgments
+
+Built with AI assistance using classic procedural graphics techniques:
+- *Hash without Sine* (`hash12` / `hash22`) by **Dave Hoskins** (MIT License)
+- Analytical ACES filmic tone-mapping fit by **Krzysztof Narkowicz**
+- Double domain-warped and 3-4-5 rotated-octave FBM techniques popularized by **Inigo Quilez**
+- Quintic smoothstep interpolation and ridged multifractal noise (**Ken Perlin** / **F. Kenton Musgrave**)

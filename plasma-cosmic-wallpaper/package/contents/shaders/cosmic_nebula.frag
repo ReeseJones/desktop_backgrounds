@@ -25,6 +25,7 @@ mat2 rot2(float a) {
     return mat2(c, -s, s, c);
 }
 
+// "Hash without Sine" by Dave Hoskins (MIT License)
 float hash12(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
     p3 += dot(p3, p3.yzx + 33.33);
@@ -146,6 +147,7 @@ vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, flo
     return acc;
 }
 
+// Analytical ACES filmic tone-mapping fit by Krzysztof Narkowicz
 vec3 aces(vec3 x) {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
