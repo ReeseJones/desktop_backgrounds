@@ -11,6 +11,10 @@ layout(std140, binding = 0) uniform buf {
     float uStarDensity;
     float uColorBalance;
     vec2 uResolution;
+    vec4 uColorBg;
+    vec4 uColorPrimary;
+    vec4 uColorSecondary;
+    vec4 uColorAccent;
 };
 
 const float PI = 3.14159265359;
@@ -58,20 +62,20 @@ float fbm(vec2 p) {
     return v;
 }
 
-vec3 starColorFromHash(float h) {
-    vec3 coolCyan = vec3(0.46, 0.92, 1.00);
-    vec3 iceBlue = vec3(0.75, 0.89, 1.00);
-    vec3 pureWhite = vec3(0.95, 0.97, 1.00);
-    vec3 softViolet = vec3(0.82, 0.72, 1.00);
+vec3 starColorFromHash(float h, vec3 accentCol, vec3 secondaryCol) {
+    vec3 coolAccent = mix(vec3(0.86, 0.94, 1.00), clamp(accentCol, 0.0, 1.0), 0.55);
+    vec3 iceNeutral = mix(vec3(0.84, 0.90, 1.00), coolAccent, 0.35);
+    vec3 pureWhite = vec3(0.96, 0.97, 1.00);
+    vec3 softSecondary = mix(vec3(0.90, 0.86, 1.00), clamp(secondaryCol, 0.0, 1.0), 0.40);
     if (h < 0.30) {
-        return mix(coolCyan, iceBlue, h / 0.30);
+        return mix(coolAccent, iceNeutral, h / 0.30);
     } else if (h < 0.72) {
-        return mix(iceBlue, pureWhite, (h - 0.30) / 0.42);
+        return mix(iceNeutral, pureWhite, (h - 0.30) / 0.42);
     }
-    return mix(pureWhite, softViolet, (h - 0.72) / 0.28);
+    return mix(pureWhite, softSecondary, (h - 0.72) / 0.28);
 }
 
-vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time) {
+vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time, vec3 accentCol, vec3 secondaryCol) {
     vec2 sp = uv * scale;
     vec2 id = floor(sp);
     vec2 gv = fract(sp) - 0.5;
@@ -119,7 +123,7 @@ vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, flo
                 spikes = spikeAmp * (sx + sy) * 0.62;
             }
 
-            vec3 scol = starColorFromHash(colorHash);
+            vec3 scol = starColorFromHash(colorHash, accentCol, secondaryCol);
             acc += scol * (core * 1.15 + halo + spikes) * mag * twinkle * exist * boundFade;
         }
     }
@@ -193,31 +197,36 @@ void main() {
     float t = uTime * 0.32;
     float bal = clamp(uColorBalance, -1.0, 1.0);
 
+    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+
     // Deep tranquil midnight cosmos gradient
-    vec3 skyTop = vec3(0.003, 0.005, 0.018);
-    vec3 skyBot = mix(vec3(0.007, 0.016, 0.048), vec3(0.016, 0.012, 0.052), bal * 0.5 + 0.5);
+    vec3 skyTop = bgCol * 0.32;
+    vec3 skyBot = bgCol * 0.95 + mix(primaryCol, secondaryCol, bal * 0.5 + 0.5) * 0.04;
     vec3 col = mix(skyTop, skyBot, smoothstep(-0.55, 0.55, qt_TexCoord0.y - 0.5));
 
     // Faint diagonal cosmic Milky Way dust veil
     vec2 dustP = rot2(-0.34) * uv * 1.9 + vec2(t * 0.010, -t * 0.006);
     float mist = fbm(dustP + 0.75 * fbm(dustP * 1.7));
     float mistBand = exp(-pow((rot2(-0.34) * uv).y * 2.3, 2.0));
-    vec3 mistCol = mix(vec3(0.02, 0.11, 0.36), vec3(0.16, 0.06, 0.38), clamp(0.45 + bal * 0.45, 0.0, 1.0));
+    vec3 mistCol = mix(primaryCol * 0.50, secondaryCol * 0.46, clamp(0.45 + bal * 0.45, 0.0, 1.0));
     col += mistCol * smoothstep(0.34, 0.84, mist) * mistBand * 0.28;
 
     // Ultra-crisp 3-layer starfield
     vec2 drift = vec2(t * 0.003, t * 0.001);
     vec3 stars = vec3(0.0);
-    stars += starLayer(uv + drift, 46.0, 0.26, 0.80, px, 0.0, uTime) * 0.58;
-    stars += starLayer(uv + drift * 1.4 + vec2(5.1, 2.3), 24.0, 0.18, 0.98, px, 0.0, uTime) * 0.88;
-    stars += starLayer(uv + drift * 1.9 + vec2(1.7, 7.9), 11.0, 0.13, 1.18, px, 0.62, uTime) * 1.15;
+    stars += starLayer(uv + drift, 46.0, 0.26, 0.80, px, 0.0, uTime, accentCol, secondaryCol) * 0.58;
+    stars += starLayer(uv + drift * 1.4 + vec2(5.1, 2.3), 24.0, 0.18, 0.98, px, 0.0, uTime, accentCol, secondaryCol) * 0.88;
+    stars += starLayer(uv + drift * 1.9 + vec2(1.7, 7.9), 11.0, 0.13, 1.18, px, 0.62, uTime, accentCol, secondaryCol) * 1.15;
     col += stars;
 
-    // Deep blue / purple / electric cyan aurora palette
-    vec3 cyanEdge = mix(vec3(0.04, 0.92, 1.00), vec3(0.24, 0.76, 1.00), clamp(bal * 0.4 + 0.2, 0.0, 1.0));
-    vec3 cobaltMid = mix(vec3(0.04, 0.30, 0.92), vec3(0.18, 0.22, 0.86), bal * 0.5 + 0.5);
-    vec3 violetTop = mix(vec3(0.18, 0.18, 0.78), vec3(0.58, 0.14, 0.92), clamp(0.58 + bal * 0.42, 0.0, 1.0));
-    vec3 amethystEdge = mix(vec3(0.12, 0.66, 1.00), vec3(0.54, 0.30, 0.98), clamp(0.45 + bal * 0.50, 0.0, 1.0));
+    // Aurora palette derived from the 4 shared base colors + uColorBalance
+    vec3 cyanEdge = mix(accentCol, mix(accentCol, primaryCol, 0.28), clamp(bal * 0.35 + 0.15, 0.0, 1.0));
+    vec3 cobaltMid = mix(primaryCol * 1.15, mix(primaryCol, secondaryCol, 0.45), bal * 0.5 + 0.5);
+    vec3 violetTop = mix(mix(primaryCol, secondaryCol, 0.45), secondaryCol * 1.05, clamp(0.60 + bal * 0.40, 0.0, 1.0));
+    vec3 amethystEdge = mix(mix(accentCol, primaryCol, 0.35), mix(secondaryCol, accentCol, 0.35), clamp(0.45 + bal * 0.50, 0.0, 1.0));
 
     // Gently tilted celestial arc frame
     vec2 ap = rot2(-0.22) * uv;

@@ -7,6 +7,7 @@ import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kquickcontrols as KQuickControls
 
 Kirigami.FormLayout {
     id: root
@@ -24,6 +25,14 @@ Kirigami.FormLayout {
     property int cfg_BrightnessPercentDefault: 100
     property int cfg_ColorBalance: 0
     property int cfg_ColorBalanceDefault: 0
+    property alias cfg_ColorBackground: bgColorBtn.color
+    property color cfg_ColorBackgroundDefault: "#0b102e"
+    property alias cfg_ColorPrimary: primaryColorBtn.color
+    property color cfg_ColorPrimaryDefault: "#1038b8"
+    property alias cfg_ColorSecondary: secondaryColorBtn.color
+    property color cfg_ColorSecondaryDefault: "#8c24e0"
+    property alias cfg_ColorAccent: accentColorBtn.color
+    property color cfg_ColorAccentDefault: "#0ee8ff"
     property int cfg_FpsLimit: 60
     property int cfg_FpsLimitDefault: 60
     property bool cfg_PauseWhenMaximized: true
@@ -33,6 +42,57 @@ Kirigami.FormLayout {
         { label: qsTr("Cosmic Plasma Nebula"), value: 0 },
         { label: qsTr("Event Horizon Vortex"), value: 1 },
         { label: qsTr("Deep-Space Plasma Aurora"), value: 2 }
+    ]
+
+    readonly property var paletteModel: [
+        {
+            label: qsTr("Cosmic Deep Blue (Default)"),
+            bg: "#0b102e",
+            primary: "#1038b8",
+            secondary: "#8c24e0",
+            accent: "#0ee8ff",
+            custom: false
+        },
+        {
+            label: qsTr("Ultraviolet Nebula"),
+            bg: "#120826",
+            primary: "#3b1d8a",
+            secondary: "#b829e6",
+            accent: "#40d9ff",
+            custom: false
+        },
+        {
+            label: qsTr("Emerald Abyss"),
+            bg: "#051916",
+            primary: "#0b7268",
+            secondary: "#1e4fa3",
+            accent: "#3effc8",
+            custom: false
+        },
+        {
+            label: qsTr("Crimson Event"),
+            bg: "#180610",
+            primary: "#96184a",
+            secondary: "#5b1a99",
+            accent: "#ff9e2c",
+            custom: false
+        },
+        {
+            label: qsTr("Arctic Aurora"),
+            bg: "#061428",
+            primary: "#0f5298",
+            secondary: "#248ea6",
+            accent: "#6ef7ff",
+            custom: false
+        },
+        {
+            label: qsTr("Custom"),
+            bg: "",
+            primary: "",
+            secondary: "",
+            accent: "",
+            custom: true
+        }
     ]
 
     readonly property var fpsModel: [
@@ -51,6 +111,23 @@ Kirigami.FormLayout {
         presetCombo.currentIndex = 0;
     }
 
+    function syncColorPaletteCombo() {
+        for (let i = 0; i < paletteModel.length; ++i) {
+            const p = paletteModel[i];
+            if (p.custom) {
+                continue;
+            }
+            if (Qt.colorEqual(cfg_ColorBackground, p.bg)
+                    && Qt.colorEqual(cfg_ColorPrimary, p.primary)
+                    && Qt.colorEqual(cfg_ColorSecondary, p.secondary)
+                    && Qt.colorEqual(cfg_ColorAccent, p.accent)) {
+                paletteCombo.currentIndex = i;
+                return;
+            }
+        }
+        paletteCombo.currentIndex = paletteModel.length - 1;
+    }
+
     function syncFpsCombo() {
         for (let i = 0; i < fpsModel.length; ++i) {
             if (fpsModel[i].value === cfg_FpsLimit) {
@@ -63,16 +140,20 @@ Kirigami.FormLayout {
 
     function formatColorBalance(val) {
         if (val <= -20) {
-            return qsTr("Deep Blue / Cyan (%1)").arg(val);
+            return qsTr("Primary / Highlight (%1)").arg(val);
         }
         if (val >= 20) {
-            return qsTr("Purple / Violet (+%1)").arg(val);
+            return qsTr("Secondary (+%1)").arg(val);
         }
         return val === 0 ? qsTr("Balanced (0)") : qsTr("Balanced (%1%2)").arg(val > 0 ? "+" : "").arg(val);
     }
 
     onCfg_PresetChanged: syncPresetCombo()
     onCfg_FpsLimitChanged: syncFpsCombo()
+    onCfg_ColorBackgroundChanged: syncColorPaletteCombo()
+    onCfg_ColorPrimaryChanged: syncColorPaletteCombo()
+    onCfg_ColorSecondaryChanged: syncColorPaletteCombo()
+    onCfg_ColorAccentChanged: syncColorPaletteCombo()
 
     Item {
         Kirigami.FormData.label: qsTr("Preview:")
@@ -89,6 +170,10 @@ Kirigami.FormLayout {
             starDensity: root.cfg_StarDensityPercent / 100.0
             brightness: root.cfg_BrightnessPercent / 100.0
             colorBalance: root.cfg_ColorBalance / 100.0
+            colorBg: root.cfg_ColorBackground
+            colorPrimary: root.cfg_ColorPrimary
+            colorSecondary: root.cfg_ColorSecondary
+            colorAccent: root.cfg_ColorAccent
             fpsLimit: 30
             initialTime: 12.0
             paused: !visible
@@ -111,6 +196,96 @@ Kirigami.FormLayout {
         Component.onCompleted: root.syncPresetCombo()
         onActivated: (index) => {
             root.cfg_Preset = root.presetModel[index].value;
+        }
+    }
+
+    QQC2.ComboBox {
+        id: paletteCombo
+        Kirigami.FormData.label: qsTr("Color Palette:")
+        Layout.fillWidth: true
+        model: root.paletteModel
+        textRole: "label"
+        Component.onCompleted: root.syncColorPaletteCombo()
+        onActivated: (index) => {
+            const p = root.paletteModel[index];
+            if (!p.custom) {
+                root.cfg_ColorBackground = p.bg;
+                root.cfg_ColorPrimary = p.primary;
+                root.cfg_ColorSecondary = p.secondary;
+                root.cfg_ColorAccent = p.accent;
+            }
+        }
+    }
+
+    GridLayout {
+        Kirigami.FormData.label: qsTr("Base Colors:")
+        Layout.fillWidth: true
+        columns: 2
+        columnSpacing: Kirigami.Units.largeSpacing
+        rowSpacing: Kirigami.Units.smallSpacing
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            KQuickControls.ColorButton {
+                id: bgColorBtn
+                showAlphaChannel: false
+                dialogTitle: qsTr("Select Space Void Color")
+            }
+
+            QQC2.Label {
+                text: qsTr("Space Void")
+                Layout.fillWidth: true
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            KQuickControls.ColorButton {
+                id: primaryColorBtn
+                showAlphaChannel: false
+                dialogTitle: qsTr("Select Primary Glow Color")
+            }
+
+            QQC2.Label {
+                text: qsTr("Primary Glow")
+                Layout.fillWidth: true
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            KQuickControls.ColorButton {
+                id: secondaryColorBtn
+                showAlphaChannel: false
+                dialogTitle: qsTr("Select Secondary Glow Color")
+            }
+
+            QQC2.Label {
+                text: qsTr("Secondary Glow")
+                Layout.fillWidth: true
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            KQuickControls.ColorButton {
+                id: accentColorBtn
+                showAlphaChannel: false
+                dialogTitle: qsTr("Select Plasma Highlight Color")
+            }
+
+            QQC2.Label {
+                text: qsTr("Plasma Highlight")
+                Layout.fillWidth: true
+            }
         }
     }
 
@@ -222,7 +397,7 @@ Kirigami.FormLayout {
             Layout.fillWidth: true
 
             QQC2.Label {
-                text: qsTr("Deep Blue / Cyan")
+                text: qsTr("Primary / Highlight")
                 font: Kirigami.Theme.smallFont
                 opacity: 0.72
             }
@@ -232,7 +407,7 @@ Kirigami.FormLayout {
             }
 
             QQC2.Label {
-                text: qsTr("Purple / Violet")
+                text: qsTr("Secondary")
                 font: Kirigami.Theme.smallFont
                 opacity: 0.72
             }
@@ -271,6 +446,10 @@ Kirigami.FormLayout {
             root.cfg_StarDensityPercent = root.cfg_StarDensityPercentDefault;
             root.cfg_BrightnessPercent = root.cfg_BrightnessPercentDefault;
             root.cfg_ColorBalance = root.cfg_ColorBalanceDefault;
+            root.cfg_ColorBackground = root.cfg_ColorBackgroundDefault;
+            root.cfg_ColorPrimary = root.cfg_ColorPrimaryDefault;
+            root.cfg_ColorSecondary = root.cfg_ColorSecondaryDefault;
+            root.cfg_ColorAccent = root.cfg_ColorAccentDefault;
             root.cfg_FpsLimit = root.cfg_FpsLimitDefault;
             root.cfg_PauseWhenMaximized = root.cfg_PauseWhenMaximizedDefault;
         }

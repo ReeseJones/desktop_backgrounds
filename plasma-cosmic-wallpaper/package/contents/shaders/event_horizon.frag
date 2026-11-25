@@ -11,6 +11,10 @@ layout(std140, binding = 0) uniform buf {
     float uStarDensity;
     float uColorBalance;
     vec2 uResolution;
+    vec4 uColorBg;
+    vec4 uColorPrimary;
+    vec4 uColorSecondary;
+    vec4 uColorAccent;
 };
 
 const float PI = 3.14159265359;
@@ -71,20 +75,20 @@ float ridgedFbm(vec2 p) {
     return v;
 }
 
-vec3 starColorFromHash(float h) {
-    vec3 coolCyan = vec3(0.45, 0.92, 1.00);
-    vec3 iceBlue = vec3(0.75, 0.89, 1.00);
-    vec3 pureWhite = vec3(0.95, 0.97, 1.00);
-    vec3 softViolet = vec3(0.83, 0.72, 1.00);
+vec3 starColorFromHash(float h, vec3 accentCol, vec3 secondaryCol) {
+    vec3 coolAccent = mix(vec3(0.86, 0.94, 1.00), clamp(accentCol, 0.0, 1.0), 0.55);
+    vec3 iceNeutral = mix(vec3(0.84, 0.90, 1.00), coolAccent, 0.35);
+    vec3 pureWhite = vec3(0.96, 0.97, 1.00);
+    vec3 softSecondary = mix(vec3(0.90, 0.86, 1.00), clamp(secondaryCol, 0.0, 1.0), 0.40);
     if (h < 0.32) {
-        return mix(coolCyan, iceBlue, h / 0.32);
+        return mix(coolAccent, iceNeutral, h / 0.32);
     } else if (h < 0.74) {
-        return mix(iceBlue, pureWhite, (h - 0.32) / 0.42);
+        return mix(iceNeutral, pureWhite, (h - 0.32) / 0.42);
     }
-    return mix(pureWhite, softViolet, (h - 0.74) / 0.26);
+    return mix(pureWhite, softSecondary, (h - 0.74) / 0.26);
 }
 
-vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time) {
+vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time, vec3 accentCol, vec3 secondaryCol) {
     vec2 sp = uv * scale;
     vec2 id = floor(sp);
     vec2 gv = fract(sp) - 0.5;
@@ -132,7 +136,7 @@ vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, flo
                 spikes = spikeAmp * (sx + sy) * 0.60;
             }
 
-            vec3 scol = starColorFromHash(colorHash);
+            vec3 scol = starColorFromHash(colorHash, accentCol, secondaryCol);
             acc += scol * (core * 1.15 + halo + spikes) * mag * twinkle * exist * boundFade;
         }
     }
@@ -158,12 +162,17 @@ void main() {
     float rShadow = 0.165;
     float rPhoton = rShadow * 1.045;
 
-    // Color palette tuned around deep blue, violet/purple, and luminous cyan
-    vec3 deepVoid = vec3(0.004, 0.007, 0.020);
-    vec3 sapphireCol = mix(vec3(0.03, 0.22, 0.72), vec3(0.11, 0.14, 0.58), bal * 0.5 + 0.5);
-    vec3 violetCol = mix(vec3(0.18, 0.14, 0.72), vec3(0.56, 0.14, 0.88), clamp(0.55 + bal * 0.45, 0.0, 1.0));
-    vec3 cyanPlasma = mix(vec3(0.06, 0.88, 1.00), vec3(0.32, 0.76, 1.00), clamp(bal * 0.35 + 0.25, 0.0, 1.0));
-    vec3 hotCore = mix(vec3(0.70, 0.96, 1.00), vec3(0.86, 0.82, 1.00), clamp(0.25 + bal * 0.25, 0.0, 1.0));
+    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+
+    // Color palette derived from the 4 shared base colors + uColorBalance
+    vec3 deepVoid = bgCol * 0.38;
+    vec3 sapphireCol = mix(primaryCol, mix(primaryCol, secondaryCol, 0.35), bal * 0.5 + 0.5);
+    vec3 violetCol = mix(mix(primaryCol, secondaryCol, 0.5), secondaryCol, clamp(0.60 + bal * 0.40, 0.0, 1.0));
+    vec3 cyanPlasma = mix(accentCol, mix(accentCol, primaryCol, 0.28), clamp(bal * 0.35 + 0.15, 0.0, 1.0));
+    vec3 hotCore = mix(mix(accentCol, vec3(0.95, 0.97, 1.0), 0.52), mix(secondaryCol, vec3(0.95, 0.97, 1.0), 0.52), clamp(0.22 + bal * 0.25, 0.0, 1.0));
 
     // Distant cosmic nebula mist surrounding the gravity well (Cartesian swirl, seam-free)
     float outerAngle = t * 0.09 + 0.65 / (rScreen + 0.35);
@@ -176,9 +185,9 @@ void main() {
     float starMask = smoothstep(rShadow + 0.004, rShadow + 0.024, rScreen);
     vec2 starUV = uv * (1.0 - 0.012 / max(rScreen * rScreen, 0.038));
     vec3 stars = vec3(0.0);
-    stars += starLayer(starUV + vec2(t * 0.004, 0.0), 44.0, 0.24, 0.82, px, 0.0, uTime) * 0.55;
-    stars += starLayer(starUV + vec2(4.2, 1.7), 23.0, 0.17, 1.00, px, 0.0, uTime) * 0.85;
-    stars += starLayer(starUV + vec2(9.1, 3.8), 10.5, 0.12, 1.20, px, 0.58, uTime) * 1.10;
+    stars += starLayer(starUV + vec2(t * 0.004, 0.0), 44.0, 0.24, 0.82, px, 0.0, uTime, accentCol, secondaryCol) * 0.55;
+    stars += starLayer(starUV + vec2(4.2, 1.7), 23.0, 0.17, 1.00, px, 0.0, uTime, accentCol, secondaryCol) * 0.85;
+    stars += starLayer(starUV + vec2(9.1, 3.8), 10.5, 0.12, 1.20, px, 0.58, uTime, accentCol, secondaryCol) * 1.10;
     col += stars * starMask;
 
     // Soft event horizon shadow eclipse over background light

@@ -25,11 +25,37 @@ Window {
         return ".";
     }
 
-    readonly property var jobs: [
-        { preset: 0, time: 14.5, file: "preset0_nebula.png" },
-        { preset: 1, time: 18.0, file: "preset1_vortex.png" },
-        { preset: 2, time: 12.0, file: "preset2_aurora.png" }
+    property string paletteMode: {
+        const args = Qt.application.arguments;
+        for (let i = 0; i < args.length - 1; ++i) {
+            if (args[i] === "--palette") {
+                return args[i + 1];
+            }
+        }
+        return "default";
+    }
+
+    readonly property var defaultJobs: [
+        { preset: 0, time: 14.5, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset0_nebula.png" },
+        { preset: 1, time: 18.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset1_vortex.png" },
+        { preset: 2, time: 12.0, bg: "#0b102e", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset2_aurora.png" }
     ]
+
+    readonly property var customJobs: [
+        { preset: 0, time: 14.5, bg: "#051916", primary: "#0b7268", secondary: "#1e4fa3", accent: "#3effc8", file: "preset0_emerald.png" },
+        { preset: 1, time: 18.0, bg: "#180610", primary: "#96184a", secondary: "#5b1a99", accent: "#ff9e2c", file: "preset1_crimson.png" },
+        { preset: 2, time: 12.0, bg: "#061428", primary: "#0f5298", secondary: "#248ea6", accent: "#6ef7ff", file: "preset2_arctic.png" }
+    ]
+
+    readonly property var jobs: {
+        if (paletteMode === "custom") {
+            return customJobs;
+        }
+        if (paletteMode === "all") {
+            return defaultJobs.concat(customJobs);
+        }
+        return defaultJobs;
+    }
     property int currentStep: 0
 
     CosmicShaderView {
@@ -37,6 +63,10 @@ Window {
         anchors.fill: parent
         preset: win.jobs[win.currentStep].preset
         initialTime: win.jobs[win.currentStep].time
+        colorBg: win.jobs[win.currentStep].bg
+        colorPrimary: win.jobs[win.currentStep].primary
+        colorSecondary: win.jobs[win.currentStep].secondary
+        colorAccent: win.jobs[win.currentStep].accent
         speed: 0.75
         starDensity: 1.0
         brightness: 1.0

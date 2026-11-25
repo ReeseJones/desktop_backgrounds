@@ -17,16 +17,7 @@ WallpaperItem {
 
     readonly property int currentPreset: Number(root.configuration.Preset ?? 0)
 
-    accentColor: {
-        switch (currentPreset) {
-        case 1:
-            return "#38c8ff";
-        case 2:
-            return "#42a5f5";
-        default:
-            return "#1fb8e8";
-        }
-    }
+    accentColor: root.configuration.ColorAccent ?? "#0ee8ff"
 
     contextualActions: [
         PlasmaCore.Action {
@@ -110,6 +101,10 @@ WallpaperItem {
         starDensity: Number(root.configuration.StarDensityPercent ?? 100) / 100.0
         brightness: Number(root.configuration.BrightnessPercent ?? 100) / 100.0
         colorBalance: Number(root.configuration.ColorBalance ?? 0) / 100.0
+        colorBg: root.configuration.ColorBackground ?? "#0b102e"
+        colorPrimary: root.configuration.ColorPrimary ?? "#1038b8"
+        colorSecondary: root.configuration.ColorSecondary ?? "#8c24e0"
+        colorAccent: root.configuration.ColorAccent ?? "#0ee8ff"
         fpsLimit: Number(root.configuration.FpsLimit ?? 60)
         paused: root.manuallyPaused
                 || root.hasObscuringWindow

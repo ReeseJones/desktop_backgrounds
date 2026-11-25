@@ -13,6 +13,10 @@ Item {
     property real starDensity: 1.0
     property real brightness: 1.0
     property real colorBalance: 0.0
+    property color colorBg: "#0b102e"
+    property color colorPrimary: "#1038b8"
+    property color colorSecondary: "#8c24e0"
+    property color colorAccent: "#0ee8ff"
     property int fpsLimit: 60
     property bool paused: false
     property real initialTime: 0.0
@@ -27,7 +31,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "#030510"
+        color: root.colorBg
     }
 
     ShaderEffect {
@@ -43,6 +47,10 @@ Item {
             Math.max(1.0, width * root.dpr),
             Math.max(1.0, height * root.dpr)
         )
+        readonly property color uColorBg: root.colorBg
+        readonly property color uColorPrimary: root.colorPrimary
+        readonly property color uColorSecondary: root.colorSecondary
+        readonly property color uColorAccent: root.colorAccent
 
         fragmentShader: {
             switch (root.preset) {

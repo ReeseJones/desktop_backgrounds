@@ -11,6 +11,10 @@ layout(std140, binding = 0) uniform buf {
     float uStarDensity;
     float uColorBalance;
     vec2 uResolution;
+    vec4 uColorBg;
+    vec4 uColorPrimary;
+    vec4 uColorSecondary;
+    vec4 uColorAccent;
 };
 
 const float PI = 3.14159265359;
@@ -74,20 +78,20 @@ float ridgedFbm(vec2 p) {
     return v;
 }
 
-vec3 starColorFromHash(float h) {
-    vec3 coolCyan = vec3(0.48, 0.92, 1.00);
-    vec3 iceBlue = vec3(0.74, 0.88, 1.00);
-    vec3 pureWhite = vec3(0.95, 0.97, 1.00);
-    vec3 softViolet = vec3(0.82, 0.72, 1.00);
+vec3 starColorFromHash(float h, vec3 accentCol, vec3 secondaryCol) {
+    vec3 coolAccent = mix(vec3(0.86, 0.94, 1.00), clamp(accentCol, 0.0, 1.0), 0.55);
+    vec3 iceNeutral = mix(vec3(0.84, 0.90, 1.00), coolAccent, 0.35);
+    vec3 pureWhite = vec3(0.96, 0.97, 1.00);
+    vec3 softSecondary = mix(vec3(0.90, 0.86, 1.00), clamp(secondaryCol, 0.0, 1.0), 0.40);
     if (h < 0.30) {
-        return mix(coolCyan, iceBlue, h / 0.30);
+        return mix(coolAccent, iceNeutral, h / 0.30);
     } else if (h < 0.72) {
-        return mix(iceBlue, pureWhite, (h - 0.30) / 0.42);
+        return mix(iceNeutral, pureWhite, (h - 0.30) / 0.42);
     }
-    return mix(pureWhite, softViolet, (h - 0.72) / 0.28);
+    return mix(pureWhite, softSecondary, (h - 0.72) / 0.28);
 }
 
-vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time) {
+vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, float spikeStrength, float time, vec3 accentCol, vec3 secondaryCol) {
     vec2 sp = uv * scale;
     vec2 id = floor(sp);
     vec2 gv = fract(sp) - 0.5;
@@ -135,7 +139,7 @@ vec3 starLayer(vec2 uv, float scale, float baseProb, float corePx, float px, flo
                 spikes = spikeAmp * (sx + sy) * 0.65;
             }
 
-            vec3 scol = starColorFromHash(colorHash);
+            vec3 scol = starColorFromHash(colorHash, accentCol, secondaryCol);
             acc += scol * (core * 1.15 + halo + spikes) * mag * twinkle * exist * boundFade;
         }
     }
@@ -154,8 +158,13 @@ void main() {
     float t = uTime * 0.042;
     float bal = clamp(uColorBalance, -1.0, 1.0);
 
+    vec3 bgCol = pow(max(clamp(uColorBg.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.6)) * 0.85;
+    vec3 primaryCol = pow(max(clamp(uColorPrimary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 secondaryCol = pow(max(clamp(uColorSecondary.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+    vec3 accentCol = pow(max(clamp(uColorAccent.rgb, 0.0, 1.0), vec3(1e-4)), vec3(1.25));
+
     // Subtle deep-space backdrop gradient
-    vec3 col = mix(vec3(0.006, 0.010, 0.030), vec3(0.016, 0.018, 0.056),
+    vec3 col = mix(bgCol * 0.45, bgCol * 1.15 + primaryCol * 0.03,
                    smoothstep(-0.7, 0.7, uv.y - uv.x * 0.25));
 
     // Align and gently curve the main cosmic nebula corridor diagonally
@@ -192,11 +201,12 @@ void main() {
     float plasmaFilaments = pow(clamp(filRaw * 0.92, 0.0, 1.0), 3.6) * (0.28 + 0.85 * corridor);
     float hotVeins = pow(clamp(filRaw * 0.96, 0.0, 1.0), 7.5) * corridor;
 
-    // Color palette controlled smoothly by uColorBalance (-1 deep blue/cyan .. +1 violet/purple)
-    vec3 deepSapphire = mix(vec3(0.02, 0.16, 0.60), vec3(0.10, 0.08, 0.46), bal * 0.5 + 0.5);
-    vec3 royalViolet = mix(vec3(0.18, 0.10, 0.65), vec3(0.50, 0.10, 0.82), clamp(0.55 + bal * 0.45, 0.0, 1.0));
-    vec3 electricCyan = mix(vec3(0.02, 0.88, 1.00), vec3(0.18, 0.72, 1.00), clamp(bal * 0.35 + 0.20, 0.0, 1.0));
-    vec3 amethystGlow = mix(vec3(0.16, 0.48, 0.98), vec3(0.66, 0.22, 0.98), clamp(0.5 + bal * 0.5, 0.0, 1.0));
+    // Color palette controlled smoothly by the 4 base colors + uColorBalance (-1 primary/accent .. +1 secondary)
+    vec3 deepSapphire = mix(primaryCol, secondaryCol, clamp(bal * 0.35 + 0.15, 0.0, 1.0)) * 0.85;
+    vec3 royalViolet = mix(primaryCol * 0.65 + secondaryCol * 0.35, secondaryCol, clamp(0.65 + bal * 0.35, 0.0, 1.0));
+    vec3 electricCyan = mix(accentCol, mix(accentCol, primaryCol, 0.35), clamp(bal * 0.35 + 0.15, 0.0, 1.0));
+    vec3 amethystGlow = mix(mix(primaryCol, accentCol, 0.45), mix(secondaryCol, vec3(1.0), 0.18), clamp(0.5 + bal * 0.5, 0.0, 1.0));
+    vec3 hotCore = mix(accentCol, vec3(0.95, 0.97, 1.0), 0.45);
 
     float colorWave = smoothstep(0.28, 0.76, q.x * 0.65 + r.y * 0.35);
     vec3 nebulaGas = mix(deepSapphire, royalViolet, clamp(colorWave + bal * 0.26, 0.0, 1.0));
@@ -208,7 +218,7 @@ void main() {
     // Luminous ionized plasma arcs & glowing filament cores
     vec3 filamentTint = mix(electricCyan, amethystGlow, clamp(0.28 + r.x * 0.45 + bal * 0.30, 0.0, 1.0));
     col += filamentTint * plasmaFilaments * 1.18;
-    col += mix(vec3(0.32, 0.96, 1.0), vec3(0.80, 0.66, 1.0), clamp(0.28 + bal * 0.32, 0.0, 1.0)) * hotVeins * 1.35;
+    col += mix(hotCore, mix(secondaryCol, vec3(1.0), 0.45), clamp(0.25 + bal * 0.30, 0.0, 1.0)) * hotVeins * 1.35;
 
     // Subtle soft ambient nebula core bloom
     col += mix(deepSapphire, electricCyan, 0.35) * broadAura * 0.085;
@@ -219,9 +229,9 @@ void main() {
     vec2 drift3 = vec2(t * 0.036, t * 0.012);
 
     vec3 stars = vec3(0.0);
-    stars += starLayer(uv + drift1, 44.0, 0.25, 0.82, px, 0.0, uTime) * 0.55;
-    stars += starLayer(uv + drift2 + vec2(3.7, 1.9), 23.0, 0.18, 1.02, px, 0.0, uTime) * 0.85;
-    stars += starLayer(uv + drift3 + vec2(8.1, 4.3), 10.5, 0.13, 1.25, px, 0.65, uTime) * 1.15;
+    stars += starLayer(uv + drift1, 44.0, 0.25, 0.82, px, 0.0, uTime, accentCol, secondaryCol) * 0.55;
+    stars += starLayer(uv + drift2 + vec2(3.7, 1.9), 23.0, 0.18, 1.02, px, 0.0, uTime, accentCol, secondaryCol) * 0.85;
+    stars += starLayer(uv + drift3 + vec2(8.1, 4.3), 10.5, 0.13, 1.25, px, 0.65, uTime, accentCol, secondaryCol) * 1.15;
 
     // Slight dust extinction on far background stars inside dense dark dust lanes
     col += stars * (1.0 - 0.40 * dustMask);

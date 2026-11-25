@@ -11,10 +11,16 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
 ## Settings (KDE Wallpaper Config)
 
 - **Preset** selector with live 16:9 preview
+- **Color Palette** quick presets (*Cosmic Deep Blue*, *Ultraviolet Nebula*, *Emerald Abyss*, *Crimson Event*, *Arctic Aurora*, *Custom*)
+- **Base Colors** (shared `uColorBg`, `uColorPrimary`, `uColorSecondary`, `uColorAccent` uniforms across all three shaders, configurable via KDE color pickers):
+  - **Space Void** (`#0b102e` default)
+  - **Primary Glow** (`#1038b8` default)
+  - **Secondary Glow** (`#8c24e0` default)
+  - **Plasma Highlight** (`#0ee8ff` default)
 - **Animation Speed** (`0%–200%`)
 - **Star Density** (`20%–200%`)
 - **Brightness** (`50%–150%`)
-- **Palette Balance** (`Deep Blue / Cyan` ↔ `Balanced` ↔ `Purple / Violet`)
+- **Palette Balance** (`Primary / Highlight` ↔ `Balanced` ↔ `Secondary`)
 - **Frame Rate** (`30 FPS`, `60 FPS`, or `VSync`)
 - **Pause when maximized/fullscreen** (automatically pauses GPU work when a window covers the screen)
 - **Right-click Desktop Actions**: *Next Cosmic Preset* and *Pause/Resume Cosmic Animation*
