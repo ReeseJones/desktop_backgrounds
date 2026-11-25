@@ -146,7 +146,8 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
     git -C "$REPO_ROOT" tag -a "$TAG" -m "Release $TAG"
     if [[ "$NO_PUSH" -eq 0 ]]; then
-        git -C "$REPO_ROOT" push origin main "$TAG"
+        git -C "$REPO_ROOT" push origin main
+        git -C "$REPO_ROOT" push origin "$TAG"
     fi
 fi
 
