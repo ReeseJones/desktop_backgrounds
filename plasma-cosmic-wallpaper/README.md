@@ -27,7 +27,10 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
 - **Pause when maximized/fullscreen** (automatically pauses GPU work when a window covers the screen)
 - **Right-click Desktop Actions**: *Next Cosmic Preset* and *Pause/Resume Cosmic Animation*
 
-## Build & Install
+## Install
+
+- **KDE Store**: [Cosmic Space & Plasma](https://store.kde.org/p/2382735/) — or install inside Plasma via **Desktop and Wallpaper → Get New Plugins…**.
+- **From source**:
 
 ```bash
 ./scripts/install.sh

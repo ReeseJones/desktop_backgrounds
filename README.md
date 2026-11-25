@@ -13,6 +13,9 @@ Native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three modula
 
 #### Quick Build & Install
 
+- **KDE Store**: [Cosmic Space & Plasma](https://store.kde.org/p/2382735/) (or install inside Plasma via **Desktop and Wallpaper → Get New Plugins…**)
+- **From source**:
+
 ```bash
 cd plasma-cosmic-wallpaper
 ./scripts/install.sh
