@@ -15,7 +15,7 @@ WallpaperItem {
     property bool manuallyPaused: false
     readonly property bool hasObscuringWindow: windowMonitorLoader.item ? windowMonitorLoader.item.obscured : false
 
-    readonly property int currentPreset: Number(root.configuration.Preset ?? 0)
+    readonly property int currentPreset: Number(root.configuration.Preset ?? -1)
 
     accentColor: root.configuration.ColorAccent ?? "#0ee8ff"
 
@@ -24,8 +24,12 @@ WallpaperItem {
             text: qsTr("Next Cosmic Preset")
             icon.name: "view-refresh"
             onTriggered: {
-                root.configuration.Preset = (root.currentPreset + 1) % 3;
-                root.configuration.writeConfig();
+                if (root.currentPreset < 0) {
+                    shaderView.triggerNextCycleScene();
+                } else {
+                    root.configuration.Preset = (root.currentPreset + 1) % shaderView.shaderUrls.length;
+                    root.configuration.writeConfig();
+                }
             }
         },
         PlasmaCore.Action {
@@ -105,6 +109,8 @@ WallpaperItem {
         colorPrimary: root.configuration.ColorPrimary ?? "#1038b8"
         colorSecondary: root.configuration.ColorSecondary ?? "#8c24e0"
         colorAccent: root.configuration.ColorAccent ?? "#0ee8ff"
+        cycleHoldSeconds: Number(root.configuration.CycleHoldSeconds ?? 360)
+        cycleBlendSeconds: Number(root.configuration.CycleBlendSeconds ?? 3)
         fpsLimit: Number(root.configuration.FpsLimit ?? 60)
         paused: root.manuallyPaused
                 || root.hasObscuringWindow

@@ -15,8 +15,12 @@ Kirigami.FormLayout {
 
     property alias formLayout: root
 
-    property int cfg_Preset: 0
-    property int cfg_PresetDefault: 0
+    property int cfg_Preset: -1
+    property int cfg_PresetDefault: -1
+    property int cfg_CycleHoldSeconds: 360
+    property int cfg_CycleHoldSecondsDefault: 360
+    property int cfg_CycleBlendSeconds: 3
+    property int cfg_CycleBlendSecondsDefault: 3
     property int cfg_SpeedPercent: 75
     property int cfg_SpeedPercentDefault: 75
     property int cfg_StarDensityPercent: 100
@@ -39,6 +43,7 @@ Kirigami.FormLayout {
     property bool cfg_PauseWhenMaximizedDefault: true
 
     readonly property var presetModel: [
+        { label: qsTr("Auto-Cycle (All Scenes)"), value: -1 },
         { label: qsTr("Cosmic Plasma Nebula"), value: 0 },
         { label: qsTr("Event Horizon Vortex"), value: 1 },
         { label: qsTr("Deep-Space Plasma Aurora"), value: 2 }
@@ -148,6 +153,16 @@ Kirigami.FormLayout {
         return val === 0 ? qsTr("Balanced (0)") : qsTr("Balanced (%1%2)").arg(val > 0 ? "+" : "").arg(val);
     }
 
+    function formatDuration(seconds) {
+        const s = Math.max(0, Math.round(seconds));
+        if (s >= 60) {
+            const mins = Math.floor(s / 60);
+            const rem = s % 60;
+            return rem === 0 ? qsTr("%1m").arg(mins) : qsTr("%1m %2s").arg(mins).arg(rem);
+        }
+        return qsTr("%1 s").arg(s);
+    }
+
     onCfg_PresetChanged: syncPresetCombo()
     onCfg_FpsLimitChanged: syncFpsCombo()
     onCfg_ColorBackgroundChanged: syncColorPaletteCombo()
@@ -155,35 +170,52 @@ Kirigami.FormLayout {
     onCfg_ColorSecondaryChanged: syncColorPaletteCombo()
     onCfg_ColorAccentChanged: syncColorPaletteCombo()
 
-    Item {
+    ColumnLayout {
         Kirigami.FormData.label: qsTr("Preview:")
         Layout.fillWidth: true
         Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-        implicitWidth: Kirigami.Units.gridUnit * 20
-        implicitHeight: Math.round((width > 0 ? width : implicitWidth) * 9 / 16)
+        spacing: Kirigami.Units.smallSpacing / 2
 
-        CosmicShaderView {
-            anchors.fill: parent
-            anchors.margins: 1
-            preset: root.cfg_Preset
-            speed: root.cfg_SpeedPercent / 100.0
-            starDensity: root.cfg_StarDensityPercent / 100.0
-            brightness: root.cfg_BrightnessPercent / 100.0
-            colorBalance: root.cfg_ColorBalance / 100.0
-            colorBg: root.cfg_ColorBackground
-            colorPrimary: root.cfg_ColorPrimary
-            colorSecondary: root.cfg_ColorSecondary
-            colorAccent: root.cfg_ColorAccent
-            fpsLimit: 30
-            initialTime: 12.0
-            paused: !visible
+        Item {
+            Layout.fillWidth: true
+            implicitWidth: Kirigami.Units.gridUnit * 20
+            implicitHeight: Math.round((width > 0 ? width : implicitWidth) * 9 / 16)
+
+            CosmicShaderView {
+                anchors.fill: parent
+                anchors.margins: 1
+                preset: root.cfg_Preset
+                speed: root.cfg_SpeedPercent / 100.0
+                starDensity: root.cfg_StarDensityPercent / 100.0
+                brightness: root.cfg_BrightnessPercent / 100.0
+                colorBalance: root.cfg_ColorBalance / 100.0
+                colorBg: root.cfg_ColorBackground
+                colorPrimary: root.cfg_ColorPrimary
+                colorSecondary: root.cfg_ColorSecondary
+                colorAccent: root.cfg_ColorAccent
+                cycleHoldSeconds: root.cfg_Preset < 0 ? Math.min(root.cfg_CycleHoldSeconds, 5) : root.cfg_CycleHoldSeconds
+                cycleBlendSeconds: root.cfg_CycleBlendSeconds
+                fpsLimit: 30
+                initialTime: 12.0
+                paused: !visible
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.width: 1
+                border.color: Qt.rgba(0.35, 0.72, 1.0, 0.35)
+            }
         }
 
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            border.width: 1
-            border.color: Qt.rgba(0.35, 0.72, 1.0, 0.35)
+        QQC2.Label {
+            visible: root.cfg_Preset < 0
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            opacity: 0.72
+            text: qsTr("Live preview holds 5 s so you can preview transitions (desktop uses %1).")
+                  .arg(root.formatDuration(root.cfg_CycleHoldSeconds))
         }
     }
 
@@ -196,6 +228,55 @@ Kirigami.FormLayout {
         Component.onCompleted: root.syncPresetCombo()
         onActivated: (index) => {
             root.cfg_Preset = root.presetModel[index].value;
+        }
+    }
+
+    RowLayout {
+        Kirigami.FormData.label: qsTr("Hold Duration:")
+        Layout.fillWidth: true
+        spacing: Kirigami.Units.smallSpacing
+        enabled: root.cfg_Preset < 0
+
+        QQC2.SpinBox {
+            id: holdSpinBox
+            from: 5
+            to: 3600
+            stepSize: 15
+            editable: true
+            value: root.cfg_CycleHoldSeconds
+            onValueModified: {
+                root.cfg_CycleHoldSeconds = value;
+            }
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            opacity: 0.78
+            text: qsTr("sec (%1 per scene)").arg(root.formatDuration(root.cfg_CycleHoldSeconds))
+        }
+    }
+
+    RowLayout {
+        Kirigami.FormData.label: qsTr("Transition Blend:")
+        Layout.fillWidth: true
+        spacing: Kirigami.Units.smallSpacing
+
+        QQC2.SpinBox {
+            id: blendSpinBox
+            from: 0
+            to: 30
+            stepSize: 1
+            editable: true
+            value: root.cfg_CycleBlendSeconds
+            onValueModified: {
+                root.cfg_CycleBlendSeconds = value;
+            }
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            opacity: 0.78
+            text: qsTr("sec crossfade")
         }
     }
 
@@ -442,6 +523,8 @@ Kirigami.FormLayout {
         icon.name: "edit-reset"
         onClicked: {
             root.cfg_Preset = root.cfg_PresetDefault;
+            root.cfg_CycleHoldSeconds = root.cfg_CycleHoldSecondsDefault;
+            root.cfg_CycleBlendSeconds = root.cfg_CycleBlendSecondsDefault;
             root.cfg_SpeedPercent = root.cfg_SpeedPercentDefault;
             root.cfg_StarDensityPercent = root.cfg_StarDensityPercentDefault;
             root.cfg_BrightnessPercent = root.cfg_BrightnessPercentDefault;

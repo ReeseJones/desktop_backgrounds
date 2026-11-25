@@ -7,8 +7,16 @@
 
   <group name="General">
     <entry name="Preset" type="Int">
-      <label>Cosmic shader preset (0: Cosmic Plasma Nebula, 1: Event Horizon Vortex, 2: Deep-Space Plasma Aurora)</label>
-      <default>0</default>
+      <label>Cosmic shader preset (-1: Auto-Cycle All Scenes, 0: Cosmic Plasma Nebula, 1: Event Horizon Vortex, 2: Deep-Space Plasma Aurora)</label>
+      <default>-1</default>
+    </entry>
+    <entry name="CycleHoldSeconds" type="Int">
+      <label>Seconds to hold each shader before transitioning in Auto-Cycle mode</label>
+      <default>360</default>
+    </entry>
+    <entry name="CycleBlendSeconds" type="Int">
+      <label>Transition crossfade duration in seconds</label>
+      <default>3</default>
     </entry>
     <entry name="SpeedPercent" type="Int">
       <label>Animation speed percentage (0 to 200)</label>

@@ -8,29 +8,34 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --preset)
             if [[ $# -lt 2 ]]; then
-                echo "Usage: $0 [--preset 0|1|2]" >&2
+                echo "Usage: $0 [--preset auto|0|1|2]" >&2
                 exit 1
             fi
             PRESET="$2"
             shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [--preset 0|1|2]"
-            echo "  0: Cosmic Plasma Nebula"
-            echo "  1: Event Horizon Vortex"
-            echo "  2: Deep-Space Plasma Aurora"
+            echo "Usage: $0 [--preset auto|0|1|2]"
+            echo "  auto: Auto-Cycle (All Scenes, default)"
+            echo "  0:    Cosmic Plasma Nebula"
+            echo "  1:    Event Horizon Vortex"
+            echo "  2:    Deep-Space Plasma Aurora"
             exit 0
             ;;
         *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: $0 [--preset 0|1|2]" >&2
+            echo "Usage: $0 [--preset auto|0|1|2]" >&2
             exit 1
             ;;
     esac
 done
 
-if [[ -n "$PRESET" && ! "$PRESET" =~ ^[012]$ ]]; then
-    echo "Error: --preset must be 0, 1, or 2 (got '$PRESET')." >&2
+if [[ "$PRESET" == "auto" ]]; then
+    PRESET="-1"
+fi
+
+if [[ -n "$PRESET" && ! "$PRESET" =~ ^(-1|0|1|2)$ ]]; then
+    echo "Error: --preset must be auto, 0, 1, or 2 (got '$PRESET')." >&2
     exit 1
 fi
 

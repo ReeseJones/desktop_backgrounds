@@ -6,7 +6,7 @@ Custom Linux desktop backgrounds and live KDE Plasma 6 shaders.
 
 ### [Cosmic Space & Plasma](plasma-cosmic-wallpaper/README.md) (`com.reesedrjones.cosmicspace`)
 
-Native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three procedural GLSL 440 space/plasma shaders with shared customizable base color uniforms (`uColorBg`, `uColorPrimary`, `uColorSecondary`, `uColorAccent`) and palette presets in KDE settings:
+Native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three modular GLSL 440 space/plasma shaders with an **Auto-Cycle** mode (configurable hold & smooth crossfade timing, `360 s` hold + `3 s` blend by default), shared customizable base color uniforms (`uColorBg`, `uColorPrimary`, `uColorSecondary`, `uColorAccent`), and palette presets in KDE settings:
 - **Cosmic Plasma Nebula**
 - **Event Horizon Vortex**
 - **Deep-Space Plasma Aurora**
@@ -21,5 +21,5 @@ cd plasma-cosmic-wallpaper
 Then select **Cosmic Space & Plasma** in **Desktop and Wallpaper** settings, or apply it from your Plasma session with:
 
 ```bash
-./scripts/apply.sh --preset 0
+./scripts/apply.sh --preset auto
 ```
