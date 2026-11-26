@@ -81,6 +81,8 @@ Window {
     readonly property real brightnessValue: win.cliReal("--brightness", 1.0)
     readonly property real starsValue: win.cliReal("--stars", 1.0)
     readonly property real balanceValue: win.cliReal("--balance", 0.0)
+    readonly property real offsetXValue: win.cliReal("--offset-x", 0.0)
+    readonly property real offsetYValue: win.cliReal("--offset-y", 0.0)
 
     readonly property var defaultJobs: [
         { preset: 0, time: 14.5, cycleTime: 0.0, bg: "#06091c", primary: "#1038b8", secondary: "#8c24e0", accent: "#0ee8ff", file: "preset0_nebula.png", outPath: "" },
@@ -198,6 +200,8 @@ Window {
         starDensity: win.starsValue
         brightness: win.brightnessValue
         colorBalance: win.balanceValue
+        offsetX: win.offsetXValue
+        offsetY: win.offsetYValue
         fpsLimit: 60
         paused: true
     }

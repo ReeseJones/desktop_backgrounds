@@ -19,6 +19,8 @@ ACCENT_COLOR=""
 BRIGHTNESS=""
 STARS=""
 BALANCE=""
+OFFSET_X=""
+OFFSET_Y=""
 OUT_FILE=""
 OUT_DIR=""
 COMPAT_MODE=0
@@ -53,6 +55,8 @@ Debug Options (with --preset):
   --brightness <num>         Override uBrightness (e.g. 1.0)
   --stars <num>              Override uStarDensity (e.g. 1.0)
   --balance <num>            Override uColorBalance (-1.0 .. 1.0)
+  --offset-x <num>           Override horizontal uOffset (-1.5 .. 1.5, 1.0 = right edge)
+  --offset-y <num>           Override vertical uOffset (-1.5 .. 1.5, 1.0 = top edge)
   --out <file.png>           Exact output path (single render only)
   --out-dir <dir>            Output directory override
   -h, --help                 Show this help message
@@ -156,6 +160,16 @@ while [[ $# -gt 0 ]]; do
         --balance)
             require_arg "$@"
             BALANCE="$2"
+            shift 2
+            ;;
+        --offset-x)
+            require_arg "$@"
+            OFFSET_X="$2"
+            shift 2
+            ;;
+        --offset-y)
+            require_arg "$@"
+            OFFSET_Y="$2"
             shift 2
             ;;
         --out)
@@ -325,6 +339,8 @@ if [[ -n "$PRESET" ]]; then
     [[ -n "$BRIGHTNESS" ]] && QML_ARGS+=(--brightness "$BRIGHTNESS")
     [[ -n "$STARS" ]] && QML_ARGS+=(--stars "$STARS")
     [[ -n "$BALANCE" ]] && QML_ARGS+=(--balance "$BALANCE")
+    [[ -n "$OFFSET_X" ]] && QML_ARGS+=(--offset-x "$OFFSET_X")
+    [[ -n "$OFFSET_Y" ]] && QML_ARGS+=(--offset-y "$OFFSET_Y")
     [[ -n "$OUT_FILE" ]] && QML_ARGS+=(--out "$OUT_FILE")
 else
     QML_ARGS+=(--palette "$SUITE")
