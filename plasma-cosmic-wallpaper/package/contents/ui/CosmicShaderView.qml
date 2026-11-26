@@ -13,6 +13,8 @@ Item {
     property real starDensity: 1.0
     property real brightness: 1.0
     property real colorBalance: 0.0
+    property real offsetX: 0.0
+    property real offsetY: 0.0
     property color colorBg: "#06091c"
     property color colorPrimary: "#1038b8"
     property color colorSecondary: "#8c24e0"
@@ -180,6 +182,7 @@ Item {
         readonly property color uColorPrimary: root.colorPrimary
         readonly property color uColorSecondary: root.colorSecondary
         readonly property color uColorAccent: root.colorAccent
+        readonly property vector2d uOffset: Qt.vector2d(root.offsetX, root.offsetY)
 
         fragmentShader: root.shaderUrls[root.activeBaseIndex]
 
@@ -209,6 +212,7 @@ Item {
         readonly property color uColorPrimary: root.colorPrimary
         readonly property color uColorSecondary: root.colorSecondary
         readonly property color uColorAccent: root.colorAccent
+        readonly property vector2d uOffset: Qt.vector2d(root.offsetX, root.offsetY)
 
         fragmentShader: root.shaderUrls[root.activeNextIndex]
 

@@ -34,6 +34,14 @@
       <label>Color balance (-100 primary/highlight to +100 secondary)</label>
       <default>0</default>
     </entry>
+    <entry name="OffsetXPercent" type="Int">
+      <label>Horizontal center offset percentage (-150 to +150; 0 is center, -100 is left edge, +100 is right edge)</label>
+      <default>0</default>
+    </entry>
+    <entry name="OffsetYPercent" type="Int">
+      <label>Vertical center offset percentage (-150 to +150; 0 is center, -100 is bottom edge, +100 is top edge)</label>
+      <default>0</default>
+    </entry>
     <entry name="ColorBackground" type="Color">
       <label>Space void background color</label>
       <default>#06091c</default>

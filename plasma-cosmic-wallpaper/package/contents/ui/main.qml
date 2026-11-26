@@ -113,6 +113,8 @@ WallpaperItem {
         starDensity: Number(root.configuration.StarDensityPercent ?? 100) / 100.0
         brightness: Number(root.configuration.BrightnessPercent ?? 100) / 100.0
         colorBalance: Number(root.configuration.ColorBalance ?? 0) / 100.0
+        offsetX: Number(root.configuration.OffsetXPercent ?? 0) / 100.0
+        offsetY: Number(root.configuration.OffsetYPercent ?? 0) / 100.0
         colorBg: root.configColor(root.configuration.ColorBackground, "#06091c")
         colorPrimary: root.configColor(root.configuration.ColorPrimary, "#1038b8")
         colorSecondary: root.configColor(root.configuration.ColorSecondary, "#8c24e0")

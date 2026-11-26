@@ -15,6 +15,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 uColorPrimary;
     vec4 uColorSecondary;
     vec4 uColorAccent;
+    vec2 uOffset;
 };
 
 const float PI = 3.14159265359;
@@ -169,7 +170,10 @@ vec3 aces(vec3 x) {
 
 void main() {
     vec2 res = max(uResolution, vec2(1.0));
-    vec2 uv = (qt_TexCoord0 - 0.5) * vec2(res.x / res.y, 1.0);
+    vec2 aspect = vec2(res.x / res.y, 1.0);
+    vec2 screenUv = (qt_TexCoord0 - 0.5) * aspect;
+    vec2 offsetClamped = clamp(uOffset, vec2(-1.5), vec2(1.5));
+    vec2 uv = ((qt_TexCoord0 - 0.5) - vec2(offsetClamped.x, -offsetClamped.y) * 0.5) * aspect;
     float px = 1.0 / max(min(res.x, res.y), 720.0);
 
     float t = uTime * 0.28;
@@ -199,7 +203,7 @@ void main() {
     vec2 outerSwirl = rot2(outerAngle) * tiltUV;
     float bgMist = fbm(outerSwirl * 2.6 + vec2(t * 0.04, -t * 0.03));
     float bgVeil = smoothstep(0.32, 0.86, bgMist) * exp(-rScreen * 0.95) * smoothstep(rShadow, rShadow + 0.28, rScreen);
-    vec3 col = mix(deepVoid * 0.78, deepVoid * 1.18, smoothstep(-0.6, 0.6, uv.y))
+    vec3 col = mix(deepVoid * 0.78, deepVoid * 1.18, smoothstep(-0.6, 0.6, screenUv.y))
              + mix(sapphireCol, violetCol, clamp(0.45 + bal * 0.35, 0.0, 1.0)) * bgVeil * 0.34;
 
     // Gravitationally deflected background starfield, masked cleanly inside the event horizon
@@ -302,7 +306,7 @@ void main() {
     col += mix(sapphireCol, violetCol, 0.4 + 0.3 * bal) * coreHalo * 0.14;
 
     // Gentle framing vignette
-    float vig = 1.0 - 0.28 * dot(uv * vec2(0.80, 1.0), uv * vec2(0.80, 1.0));
+    float vig = 1.0 - 0.28 * dot(screenUv * vec2(0.80, 1.0), screenUv * vec2(0.80, 1.0));
     col *= clamp(vig, 0.65, 1.0);
 
     col *= clamp(uBrightness, 0.35, 1.85);

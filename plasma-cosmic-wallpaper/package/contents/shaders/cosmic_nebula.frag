@@ -15,6 +15,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 uColorPrimary;
     vec4 uColorSecondary;
     vec4 uColorAccent;
+    vec2 uOffset;
 };
 
 const float PI = 3.14159265359;
@@ -154,7 +155,10 @@ vec3 aces(vec3 x) {
 
 void main() {
     vec2 res = max(uResolution, vec2(1.0));
-    vec2 uv = (qt_TexCoord0 - 0.5) * vec2(res.x / res.y, 1.0);
+    vec2 aspect = vec2(res.x / res.y, 1.0);
+    vec2 screenUv = (qt_TexCoord0 - 0.5) * aspect;
+    vec2 offsetClamped = clamp(uOffset, vec2(-1.5), vec2(1.5));
+    vec2 uv = ((qt_TexCoord0 - 0.5) - vec2(offsetClamped.x, -offsetClamped.y) * 0.5) * aspect;
     float px = 1.0 / max(min(res.x, res.y), 720.0);
 
     float t = uTime * 0.042;
@@ -167,7 +171,7 @@ void main() {
 
     // Deep-space backdrop tinted directly by Space Void (uColorBg)
     vec3 col = mix(bgCol * 0.72, bgCol * 1.25 + primaryCol * 0.025,
-                   smoothstep(-0.7, 0.7, uv.y - uv.x * 0.25));
+                   smoothstep(-0.7, 0.7, screenUv.y - screenUv.x * 0.25));
 
     // Align and gently curve the main cosmic nebula corridor diagonally
     vec2 np = rot2(-0.42) * uv;
@@ -239,7 +243,7 @@ void main() {
     col += stars * (1.0 - 0.40 * dustMask);
 
     // Gentle edge vignette to keep desktop framing deep and calm
-    float vig = 1.0 - 0.26 * dot(uv * vec2(0.82, 1.0), uv * vec2(0.82, 1.0));
+    float vig = 1.0 - 0.26 * dot(screenUv * vec2(0.82, 1.0), screenUv * vec2(0.82, 1.0));
     col *= clamp(vig, 0.68, 1.0);
 
     col *= clamp(uBrightness, 0.35, 1.85);

@@ -15,6 +15,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 uColorPrimary;
     vec4 uColorSecondary;
     vec4 uColorAccent;
+    vec2 uOffset;
 };
 
 const float PI = 3.14159265359;
@@ -193,7 +194,10 @@ vec3 aces(vec3 x) {
 
 void main() {
     vec2 res = max(uResolution, vec2(1.0));
-    vec2 uv = (qt_TexCoord0 - 0.5) * vec2(res.x / res.y, 1.0);
+    vec2 aspect = vec2(res.x / res.y, 1.0);
+    vec2 screenUv = (qt_TexCoord0 - 0.5) * aspect;
+    vec2 offsetClamped = clamp(uOffset, vec2(-1.5), vec2(1.5));
+    vec2 uv = ((qt_TexCoord0 - 0.5) - vec2(offsetClamped.x, -offsetClamped.y) * 0.5) * aspect;
     float px = 1.0 / max(min(res.x, res.y), 720.0);
 
     float t = uTime * 0.32;
@@ -255,7 +259,7 @@ void main() {
     ) * 0.52;
 
     // Gentle framing vignette
-    float vig = 1.0 - 0.25 * dot(uv * vec2(0.82, 1.0), uv * vec2(0.82, 1.0));
+    float vig = 1.0 - 0.25 * dot(screenUv * vec2(0.82, 1.0), screenUv * vec2(0.82, 1.0));
     col *= clamp(vig, 0.68, 1.0);
 
     col *= clamp(uBrightness, 0.35, 1.85);

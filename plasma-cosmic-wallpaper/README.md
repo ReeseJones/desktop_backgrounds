@@ -23,6 +23,7 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
 - **Star Density** (`20%–200%`)
 - **Brightness** (`50%–150%`)
 - **Palette Balance** (`Primary / Highlight` ↔ `Balanced` ↔ `Secondary`)
+- **Center Offset** (`-150%` to `+150%` X/Y sliders, or click-and-drag directly on the live preview to reposition the scene center)
 - **Frame Rate** (`30 FPS`, `60 FPS`, or `VSync`)
 - **Pause when maximized/fullscreen** (automatically pauses GPU work when a window covers the screen)
 - **Right-click Desktop Actions**: *Next Cosmic Preset* and *Pause/Resume Cosmic Animation*

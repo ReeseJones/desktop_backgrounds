@@ -31,6 +31,10 @@ Kirigami.FormLayout {
     property int cfg_BrightnessPercentDefault: 100
     property int cfg_ColorBalance: 0
     property int cfg_ColorBalanceDefault: 0
+    property int cfg_OffsetXPercent: 0
+    property int cfg_OffsetXPercentDefault: 0
+    property int cfg_OffsetYPercent: 0
+    property int cfg_OffsetYPercentDefault: 0
     property color cfg_ColorBackground: "#06091c"
     property color cfg_ColorBackgroundDefault: "#06091c"
     property color cfg_ColorPrimary: "#1038b8"
@@ -180,6 +184,14 @@ Kirigami.FormLayout {
         return qsTr("%1 s").arg(s);
     }
 
+    function clampOffsetPercent(val) {
+        return Math.max(-150, Math.min(150, Math.round(val)));
+    }
+
+    function formatOffsetPercent(val) {
+        return val === 0 ? qsTr("0%") : qsTr("%1%2%").arg(val > 0 ? "+" : "").arg(val);
+    }
+
     Component.onCompleted: {
         syncColorButtons();
         syncColorPaletteCombo();
@@ -211,9 +223,11 @@ Kirigami.FormLayout {
         spacing: Kirigami.Units.smallSpacing / 2
 
         Item {
+            id: previewBox
             Layout.fillWidth: true
             implicitWidth: Kirigami.Units.gridUnit * 20
             implicitHeight: Math.round((width > 0 ? width : implicitWidth) * 9 / 16)
+            clip: true
 
             CosmicShaderView {
                 anchors.fill: parent
@@ -223,6 +237,8 @@ Kirigami.FormLayout {
                 starDensity: root.cfg_StarDensityPercent / 100.0
                 brightness: root.cfg_BrightnessPercent / 100.0
                 colorBalance: root.cfg_ColorBalance / 100.0
+                offsetX: root.cfg_OffsetXPercent / 100.0
+                offsetY: root.cfg_OffsetYPercent / 100.0
                 colorBg: root.cfg_ColorBackground
                 colorPrimary: root.cfg_ColorPrimary
                 colorSecondary: root.cfg_ColorSecondary
@@ -234,12 +250,123 @@ Kirigami.FormLayout {
                 paused: !visible
             }
 
+            Item {
+                id: reticleContainer
+                readonly property real reticleX: previewBox.width * (0.5 + 0.5 * (root.cfg_OffsetXPercent / 100.0))
+                readonly property real reticleY: previewBox.height * (0.5 - 0.5 * (root.cfg_OffsetYPercent / 100.0))
+
+                x: reticleX - width / 2
+                y: reticleY - height / 2
+                width: 24
+                height: 24
+                opacity: previewDragArea.pressed
+                         ? 0.95
+                         : (previewDragArea.containsMouse
+                            ? 0.78
+                            : ((root.cfg_OffsetXPercent !== 0 || root.cfg_OffsetYPercent !== 0) ? 0.45 : 0.0))
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 120
+                    }
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 14
+                    height: 14
+                    radius: 7
+                    color: "transparent"
+                    border.width: 1.5
+                    border.color: Qt.rgba(0.95, 0.98, 1.0, 0.92)
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 1
+                    color: Qt.rgba(0.55, 0.88, 1.0, 0.9)
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 1
+                    height: 22
+                    color: Qt.rgba(0.55, 0.88, 1.0, 0.9)
+                }
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.margins: 6
+                radius: 4
+                color: Qt.rgba(0.03, 0.05, 0.12, 0.78)
+                border.width: 1
+                border.color: Qt.rgba(0.35, 0.72, 1.0, 0.4)
+                implicitWidth: coordBadgeLabel.implicitWidth + 10
+                implicitHeight: coordBadgeLabel.implicitHeight + 6
+                visible: previewDragArea.containsMouse || previewDragArea.pressed
+
+                QQC2.Label {
+                    id: coordBadgeLabel
+                    anchors.centerIn: parent
+                    font: Kirigami.Theme.smallFont
+                    color: "#eef6ff"
+                    text: qsTr("X: %1  Y: %2")
+                          .arg(root.formatOffsetPercent(root.cfg_OffsetXPercent))
+                          .arg(root.formatOffsetPercent(root.cfg_OffsetYPercent))
+                }
+            }
+
+            MouseArea {
+                id: previewDragArea
+                anchors.fill: parent
+                hoverEnabled: true
+                preventStealing: true
+                acceptedButtons: Qt.LeftButton
+                cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                function updateOffsetFromPoint(px, py) {
+                    if (previewBox.width <= 0 || previewBox.height <= 0) {
+                        return;
+                    }
+                    const nx = ((px / previewBox.width) - 0.5) * 200.0;
+                    const ny = (0.5 - (py / previewBox.height)) * 200.0;
+                    root.cfg_OffsetXPercent = root.clampOffsetPercent(nx);
+                    root.cfg_OffsetYPercent = root.clampOffsetPercent(ny);
+                }
+
+                onPressed: (mouse) => {
+                    previewDragArea.updateOffsetFromPoint(mouse.x, mouse.y);
+                }
+
+                onPositionChanged: (mouse) => {
+                    if (previewDragArea.pressed) {
+                        previewDragArea.updateOffsetFromPoint(mouse.x, mouse.y);
+                    }
+                }
+
+                onDoubleClicked: {
+                    root.cfg_OffsetXPercent = 0;
+                    root.cfg_OffsetYPercent = 0;
+                }
+            }
+
             Rectangle {
                 anchors.fill: parent
                 color: "transparent"
                 border.width: 1
                 border.color: Qt.rgba(0.35, 0.72, 1.0, 0.35)
             }
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            opacity: 0.72
+            text: qsTr("Click or drag preview to shift center (double-click to recenter).")
         }
 
         QQC2.Label {
@@ -553,6 +680,94 @@ Kirigami.FormLayout {
         }
     }
 
+    ColumnLayout {
+        Kirigami.FormData.label: qsTr("Center Offset:")
+        Layout.fillWidth: true
+        spacing: Kirigami.Units.smallSpacing / 2
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Label {
+                text: qsTr("X")
+                Layout.minimumWidth: Kirigami.Units.gridUnit
+                opacity: 0.85
+            }
+
+            QQC2.Slider {
+                id: offsetXSlider
+                Layout.fillWidth: true
+                from: -150
+                to: 150
+                stepSize: 1
+                snapMode: QQC2.Slider.SnapAlways
+                value: root.cfg_OffsetXPercent
+                onMoved: {
+                    root.cfg_OffsetXPercent = Math.round(value);
+                }
+            }
+
+            QQC2.Label {
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 3.5
+                horizontalAlignment: Text.AlignRight
+                text: root.formatOffsetPercent(root.cfg_OffsetXPercent)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Label {
+                text: qsTr("Y")
+                Layout.minimumWidth: Kirigami.Units.gridUnit
+                opacity: 0.85
+            }
+
+            QQC2.Slider {
+                id: offsetYSlider
+                Layout.fillWidth: true
+                from: -150
+                to: 150
+                stepSize: 1
+                snapMode: QQC2.Slider.SnapAlways
+                value: root.cfg_OffsetYPercent
+                onMoved: {
+                    root.cfg_OffsetYPercent = Math.round(value);
+                }
+            }
+
+            QQC2.Label {
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 3.5
+                horizontalAlignment: Text.AlignRight
+                text: root.formatOffsetPercent(root.cfg_OffsetYPercent)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                text: qsTr("0% center · ±100% edges")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.72
+            }
+
+            QQC2.Button {
+                text: qsTr("Center")
+                icon.name: "edit-undo"
+                enabled: root.cfg_OffsetXPercent !== 0 || root.cfg_OffsetYPercent !== 0
+                onClicked: {
+                    root.cfg_OffsetXPercent = 0;
+                    root.cfg_OffsetYPercent = 0;
+                }
+            }
+        }
+    }
+
     QQC2.ComboBox {
         id: fpsCombo
         Kirigami.FormData.label: qsTr("Frame Rate:")
@@ -587,6 +802,8 @@ Kirigami.FormLayout {
             root.cfg_StarDensityPercent = root.cfg_StarDensityPercentDefault;
             root.cfg_BrightnessPercent = root.cfg_BrightnessPercentDefault;
             root.cfg_ColorBalance = root.cfg_ColorBalanceDefault;
+            root.cfg_OffsetXPercent = root.cfg_OffsetXPercentDefault;
+            root.cfg_OffsetYPercent = root.cfg_OffsetYPercentDefault;
             root.cfg_ColorBackground = root.cfg_ColorBackgroundDefault;
             root.cfg_ColorPrimary = root.cfg_ColorPrimaryDefault;
             root.cfg_ColorSecondary = root.cfg_ColorSecondaryDefault;
