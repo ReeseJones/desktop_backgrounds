@@ -8,7 +8,12 @@ dist/
 .kde-store.env
 
 # Local preview renders
-plasma-cosmic-wallpaper/previews/
+previews/
+*/previews/
+
+# Python bytecode
+__pycache__/
+*.pyc
 
 # OS / editor noise
 .DS_Store

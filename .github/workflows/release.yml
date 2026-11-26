@@ -25,7 +25,7 @@ jobs:
       - name: Verify metadata version matches tag
         id: meta
         run: |
-          VERSION="$(python3 -c 'import json; print(json.load(open("plasma-cosmic-wallpaper/package/metadata.json"))["KPlugin"]["Version"])')"
+          VERSION="$(python3 scripts/metadata_tool.py get plasma-cosmic-wallpaper/package/metadata.json --field version)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           if [[ "${{ github.ref_type }}" == "tag" && "${{ github.ref_name }}" != "v${VERSION}" ]]; then

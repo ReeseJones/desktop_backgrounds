@@ -54,13 +54,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-read -r PLUGIN_ID CURRENT_VERSION < <(python3 - "$META_JSON" <<'PY'
-import json, sys
-with open(sys.argv[1], "r", encoding="utf-8") as f:
-    kp = json.load(f)["KPlugin"]
-print(kp["Id"], kp["Version"])
-PY
-)
+read -r PLUGIN_ID CURRENT_VERSION < <(python3 "$REPO_ROOT/scripts/metadata_tool.py" get "$META_JSON" --field id-version)
 
 if [[ -z "$BUMP_ARG" ]]; then
     if [[ ! -t 0 ]]; then
@@ -72,27 +66,7 @@ if [[ -z "$BUMP_ARG" ]]; then
     BUMP_ARG="${BUMP_ARG:-patch}"
 fi
 
-NEW_VERSION="$(python3 - "$CURRENT_VERSION" "$BUMP_ARG" <<'PY'
-import re, sys
-cur, mode = sys.argv[1], sys.argv[2]
-m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", cur)
-if not m:
-    raise SystemExit(f"Current version '{cur}' is not X.Y.Z")
-maj, min_, pat = map(int, m.groups())
-if mode == "same":
-    print(cur)
-elif mode == "patch":
-    print(f"{maj}.{min_}.{pat + 1}")
-elif mode == "minor":
-    print(f"{maj}.{min_ + 1}.0")
-elif mode == "major":
-    print(f"{maj + 1}.0.0")
-elif re.fullmatch(r"\d+\.\d+\.\d+", mode):
-    print(mode)
-else:
-    raise SystemExit(f"Invalid bump/version '{mode}'")
-PY
-)"
+NEW_VERSION="$(python3 "$REPO_ROOT/scripts/metadata_tool.py" bump "$CURRENT_VERSION" "$BUMP_ARG")"
 
 TAG="v${NEW_VERSION}"
 echo "Release target: $PLUGIN_ID $CURRENT_VERSION -> $NEW_VERSION ($TAG)"
@@ -114,16 +88,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
     fi
 
     if [[ "$NEW_VERSION" != "$CURRENT_VERSION" ]]; then
-        python3 - "$META_JSON" "$NEW_VERSION" <<'PY'
-import json, sys
-path, ver = sys.argv[1], sys.argv[2]
-with open(path, "r", encoding="utf-8") as f:
-    data = json.load(f)
-data["KPlugin"]["Version"] = ver
-with open(path, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=4)
-    f.write("\n")
-PY
+        python3 "$REPO_ROOT/scripts/metadata_tool.py" set-version "$META_JSON" "$NEW_VERSION"
         echo "Updated KPlugin.Version -> $NEW_VERSION in metadata.json"
     fi
 fi
