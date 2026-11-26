@@ -46,3 +46,4 @@ Built with AI assistance using classic procedural graphics techniques:
 - Analytical ACES filmic tone-mapping fit by **Krzysztof Narkowicz**
 - Double domain-warped and 3-4-5 rotated-octave FBM techniques popularized by **Inigo Quilez**
 - Quintic smoothstep interpolation and ridged multifractal noise (**Ken Perlin** / **F. Kenton Musgrave**)
+- Interleaved Gradient Noise dithering by **Jorge Jimenez**

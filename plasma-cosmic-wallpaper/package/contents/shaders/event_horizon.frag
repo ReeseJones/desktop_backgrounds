@@ -18,6 +18,7 @@ layout(std140, binding = 0) uniform buf {
 };
 
 const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
 
 mat2 rot2(float a) {
     float c = cos(a);
@@ -63,17 +64,34 @@ float fbm(vec2 p) {
     return v;
 }
 
-float ridgedFbm(vec2 p) {
+float fbm4(vec2 p) {
+    float v = 0.0;
+    float amp = 0.5;
+    mat2 m = mat2(0.80, 0.60, -0.60, 0.80) * 2.03;
+    for (int i = 0; i < 4; ++i) {
+        v += amp * vnoise(p);
+        p = m * p + vec2(11.3, 27.9);
+        amp *= 0.5;
+    }
+    return v / 0.9375;
+}
+
+float ridgedFbm3(vec2 p) {
     float v = 0.0;
     float amp = 0.55;
     mat2 m = mat2(0.80, -0.60, 0.60, 0.80) * 2.05;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 3; ++i) {
         float n = 1.0 - abs(2.0 * vnoise(p) - 1.0);
         v += n * n * amp;
         p = m * p + vec2(5.7, 17.1);
         amp *= 0.48;
     }
     return v;
+}
+
+// Interleaved Gradient Noise by Jorge Jimenez (for banding-free TPDF dithering)
+float interleavedGradientNoise(vec2 p) {
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
 vec3 starColorFromHash(float h, vec3 accentCol, vec3 secondaryCol) {
@@ -177,7 +195,7 @@ void main() {
     vec3 hotCore = mix(mix(accentCol, vec3(0.95, 0.97, 1.0), 0.52), mix(secondaryCol, vec3(0.95, 0.97, 1.0), 0.52), clamp(0.22 + bal * 0.25, 0.0, 1.0));
 
     // Distant cosmic nebula mist surrounding the gravity well (Cartesian swirl, seam-free)
-    float outerAngle = t * 0.09 + 0.65 / (rScreen + 0.35);
+    float outerAngle = mod(t * 0.09, TWO_PI) + 0.65 / (rScreen + 0.35);
     vec2 outerSwirl = rot2(outerAngle) * tiltUV;
     float bgMist = fbm(outerSwirl * 2.6 + vec2(t * 0.04, -t * 0.03));
     float bgVeil = smoothstep(0.32, 0.86, bgMist) * exp(-rScreen * 0.95) * smoothstep(rShadow, rShadow + 0.28, rScreen);
@@ -198,18 +216,19 @@ void main() {
 
     // Gravitationally lensed upper and lower arches (back of disk bent over/under shadow)
     vec2 normUV = tiltUV / max(rScreen, 1e-4);
-    float lensAngle = t * 0.55 + 2.3 / (rScreen + 0.14);
-    vec2 lensCoord = rot2(lensAngle) * (normUV * (0.24 + max(rScreen - rShadow, 0.0) * 2.2));
-    float lensNoise = fbm(lensCoord * 3.4);
-    float lensStream = ridgedFbm(lensCoord * 4.2 + vec2(0.0, t * 0.15));
-
     float lensDelta = max(rScreen - rShadow, 0.0);
-    float lensProfile = exp(-lensDelta / 0.088) * smoothstep(rShadow - 0.002, rShadow + 0.018, rScreen);
-    float archBias = 0.40 + 0.60 * pow(abs(normUV.y), 1.15);
+    float lensAngle = mod(t * 0.42, TWO_PI) + 1.15 / (rScreen + 0.28);
+    vec2 lensCoord = rot2(lensAngle) * (normUV * (0.30 + lensDelta * 1.65));
+    float lensWarp = fbm4(lensCoord * 2.1 + vec2(1.7, -2.3));
+    float lensNoise = fbm4(lensCoord * 2.5 + vec2(lensWarp * 0.55, -lensWarp * 0.45));
+    float lensFilament = smoothstep(0.24, 0.84, fbm4(lensCoord * 3.4 + vec2(-lensWarp * 0.60, t * 0.08)));
+
+    float lensProfile = exp(-lensDelta / 0.095) * smoothstep(rShadow - 0.004, rShadow + 0.022, rScreen);
+    float archBias = 0.38 + 0.62 * pow(abs(normUV.y), 1.15);
     float dopplerLens = 0.72 + 0.42 * clamp(-normUV.x, -1.0, 1.0);
 
-    vec3 lensTint = mix(violetCol, cyanPlasma, smoothstep(0.28, 0.76, lensStream) * (0.72 - 0.20 * bal));
-    vec3 lensGlow = lensTint * lensProfile * archBias * dopplerLens * (0.48 + 0.82 * lensNoise) * 1.12;
+    vec3 lensTint = mix(violetCol, cyanPlasma, lensFilament * (0.72 - 0.20 * bal));
+    vec3 lensGlow = lensTint * lensProfile * archBias * dopplerLens * (0.56 + 0.68 * lensNoise) * 1.08;
     col += lensGlow * behindHorizon;
 
     // Razor-sharp photon ring right at the shadow edge
@@ -220,21 +239,35 @@ void main() {
     vec3 photonCol = mix(violetCol, hotCore, 0.65) * photonBloom * 0.55 + hotCore * photonCore * 1.35;
     photonCol *= dopplerRing;
 
-    // Tilted 3D relativistic accretion disk (evaluated in rotated Cartesian space -> ZERO seam!)
+    // Tilted 3D relativistic accretion disk (evaluated in rotated Cartesian space -> ZERO seam, windup-free!)
     vec2 diskP = vec2(tiltUV.x, tiltUV.y * 3.10);
     float rDisk = length(diskP);
 
-    float diskAngle = t * 0.52 / pow(max(rDisk, 0.16), 0.65) + 2.9 / (rDisk + 0.17);
-    vec2 swirlP = rot2(diskAngle) * diskP;
+    float baseTwist = 1.45 / (rDisk + 0.34);
+    float innerAngle = mod(t * 0.92, TWO_PI) + baseTwist;
+    float outerDiskAngle = mod(t * 0.40, TWO_PI) + baseTwist * 0.85;
+    vec2 innerP = rot2(innerAngle) * diskP;
+    vec2 outerP = rot2(outerDiskAngle) * diskP;
 
-    float dGas = fbm(swirlP * 3.8);
-    float dFilaments = ridgedFbm(swirlP * 4.8 + vec2(dGas * 0.75, -dGas * 0.55));
-    float smoothBands = 0.55 + 0.45 * sin(rDisk * 14.5 - dGas * 3.2 + t * 1.1);
+    float innerWarp = fbm4(innerP * 2.1 + vec2(3.1, -1.9));
+    float innerGas = fbm4(innerP * 2.7 + vec2(innerWarp * 0.55, -innerWarp * 0.45));
+    float innerWisps = ridgedFbm3(innerP * 3.0 + vec2(innerGas * 0.60, -innerGas * 0.45));
 
-    float innerCutoff = smoothstep(0.185, 0.255, rDisk);
-    float outerFalloff = exp(-max(rDisk - 0.23, 0.0) * 3.0) * smoothstep(0.95, 0.50, rDisk);
-    float diskStructure = mix(dGas, dFilaments, 0.48) * (0.68 + 0.32 * smoothBands);
-    float diskDensity = innerCutoff * outerFalloff * smoothstep(0.12, 0.82, diskStructure);
+    float outerWarp = fbm4(outerP * 1.8 + vec2(-4.2, 2.7));
+    float outerGas = fbm4(outerP * 2.4 + vec2(outerWarp * 0.55, -outerWarp * 0.45));
+    float outerWisps = ridgedFbm3(outerP * 2.8 + vec2(outerGas * 0.55, -outerGas * 0.40));
+
+    float outerMix = smoothstep(0.23, 0.54, rDisk);
+    float dGas = mix(innerGas, outerGas, outerMix);
+    float dFilaments = mix(innerWisps, outerWisps, outerMix);
+
+    float innerCutoff = smoothstep(0.180, 0.265, rDisk);
+    float outerFalloff = exp(-max(rDisk - 0.23, 0.0) * 2.85) * smoothstep(0.96, 0.48, rDisk);
+
+    float baseBody = smoothstep(0.14, 0.86, dGas);
+    float softWisps = smoothstep(0.24, 0.92, dFilaments);
+    float diskStructure = mix(0.42, 1.0, baseBody) * (0.74 + 0.38 * softWisps);
+    float diskDensity = innerCutoff * outerFalloff * diskStructure;
 
     // Relativistic Doppler beaming (left/approaching side boosted cyan-white, right/receding deeper violet)
     float approach = clamp(-diskP.x / max(rDisk, 0.08), -1.0, 1.0);
@@ -243,13 +276,13 @@ void main() {
     float radialHeat = smoothstep(0.68, 0.21, rDisk);
     vec3 diskOuterCol = mix(sapphireCol, violetCol, clamp(0.45 + 0.45 * bal + 0.25 * (1.0 - approach), 0.0, 1.0));
     vec3 diskInnerCol = mix(cyanPlasma, hotCore, radialHeat * 0.65 + 0.20 * max(approach, 0.0));
-    vec3 diskColor = mix(diskOuterCol, diskInnerCol, clamp(radialHeat * 0.85 + dFilaments * 0.32, 0.0, 1.0));
+    vec3 diskColor = mix(diskOuterCol, diskInnerCol, clamp(radialHeat * 0.82 + softWisps * 0.30, 0.0, 1.0));
 
     // Extra bright ionized inner ISCO ribbon
-    float iscoRing = exp(-pow((rDisk - 0.245) / 0.038, 2.0)) * (0.50 + 0.65 * dFilaments);
+    float iscoRing = exp(-pow((rDisk - 0.245) / 0.044, 2.0)) * (0.56 + 0.48 * softWisps);
 
     // Occlude back half behind the event horizon while foreground sweeps cleanly across its face
-    float isForeground = smoothstep(-0.010, 0.025, tiltUV.y);
+    float isForeground = smoothstep(-0.015, 0.030, tiltUV.y);
     float diskOcclusion = mix(behindHorizon, 1.0, isForeground);
     float frontAlpha = clamp((diskDensity * 1.45 + iscoRing * 0.90) * isForeground, 0.0, 1.0);
 
@@ -261,8 +294,8 @@ void main() {
 
     // Composite luminous accretion disk plasma streams in front of the shadow on foreground half
     col = mix(col, vec3(0.0), frontAlpha * 0.55);
-    col += diskColor * diskDensity * dopplerBoost * diskOcclusion * 1.48;
-    col += mix(cyanPlasma, hotCore, 0.50) * iscoRing * dopplerBoost * diskOcclusion * 0.82;
+    col += diskColor * diskDensity * dopplerBoost * diskOcclusion * 1.38;
+    col += mix(cyanPlasma, hotCore, 0.50) * iscoRing * dopplerBoost * diskOcclusion * 0.78;
 
     // Subtle soft axial plasma bloom
     float coreHalo = exp(-rScreen * 3.1) * behindHorizon;
@@ -275,9 +308,10 @@ void main() {
     col *= clamp(uBrightness, 0.35, 1.85);
     col = aces(col);
 
-    // Sub-LSB triangular dithering
-    float dither = (hash12(gl_FragCoord.xy) + hash12(gl_FragCoord.xy + vec2(13.37, 29.53)) - 1.0) * (0.75 / 255.0);
-    col = clamp(col + dither, 0.0, 1.0);
+    // Full-LSB triangular Interleaved Gradient Noise dithering to eliminate dark-gradient banding
+    float ign = interleavedGradientNoise(gl_FragCoord.xy);
+    float triDither = (ign < 0.5) ? (sqrt(2.0 * ign) - 1.0) : (1.0 - sqrt(2.0 - 2.0 * ign));
+    col = clamp(col + triDither * (1.0 / 255.0), 0.0, 1.0);
 
     fragColor = vec4(col, 1.0) * qt_Opacity;
 }
