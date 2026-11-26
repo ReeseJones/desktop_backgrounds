@@ -50,6 +50,25 @@ Or apply it from a terminal in your active Plasma session:
 ./scripts/apply.sh --preset auto
 ```
 
+## Testing & Screenshot Debugging
+
+Validate shaders, QML, and GPU offscreen renders from the repository root using `--target`:
+
+```bash
+# Syntax, metadata/XML, QSB v8 compatibility, qmllint, and offscreen GPU renders
+../scripts/test-wallpaper.sh --target plasma-cosmic-wallpaper
+
+# Generate the 6 official 1280x720 KDE Store gallery PNGs into ../dist/screenshots/
+../scripts/screenshot.sh --product
+
+# Debug shader behavior (1-hour time soak, custom resolution, or Auto-Cycle midpoint blend)
+../scripts/screenshot.sh --suite soak
+../scripts/screenshot.sh --preset 1 --times 18,3600 --size 1920x1080
+../scripts/screenshot.sh --preset auto --cycle-time 361.5 --out previews/blend.png
+```
+
+See [../docs/TESTING.md](../docs/TESTING.md) for all suite presets (`default`, `custom`, `voidtest`, `blend`, `soak`, `quick`, `product`, `all`), uniform override flags, and why offscreen GPU rendering uses Qt Quick RHI (`QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl`).
+
 ## Packaging & Releases
 
 - Build a cross-distro KDE Store archive (pre-baked with QSB v8 for Qt 6.5–6.12+) and optional gallery screenshots:
@@ -62,6 +81,14 @@ Or apply it from a terminal in your active Plasma session:
   ```
 
 See [../docs/PUBLISHING.md](../docs/PUBLISHING.md) for details.
+
+## Architecture & References
+
+For a guided explanation of how `Plasma/Wallpaper` KPackages, KConfigXT (`main.xml` + `cfg_*`), `WallpaperItem`, and Qt 6's `ShaderEffect` + `qsb` pipeline fit together, see **[../docs/KDE_AND_QT.md](../docs/KDE_AND_QT.md)**.
+
+Key official upstream docs:
+- **KDE Plasma 6**: [`WallpaperItem` API](https://api.kde.org/qml-org-kde-plasma-plasmoid-wallpaperitem.html) · [Plasma Configuration & KConfigXT](https://develop.kde.org/docs/plasma/widget/configuration/) · [Upstream Wallpapers](https://invent.kde.org/plasma/plasma-workspace/-/tree/master/wallpapers)
+- **Qt 6**: [`ShaderEffect` QML Type](https://doc.qt.io/qt-6/qml-qtquick-shadereffect.html) · [`qsb` (Qt Shader Baker)](https://doc.qt.io/qt-6/qtshadertools-qsb.html) · [Qt Quick Scene Graph](https://doc.qt.io/qt-6/qtquick-visualcanvas-scenegraph.html)
 
 ## Credits & Acknowledgments
 

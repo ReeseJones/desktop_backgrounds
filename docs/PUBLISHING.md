@@ -21,20 +21,22 @@ Using strictly increasing `X.Y.Z` versions (`1.0.0` → `1.0.1` → `1.1.0`) in 
 
 To keep publishing fast and foolproof:
 1. **Local/CI packaging + GitHub Releases** are 100% automated via [`scripts/release.sh`](../plasma-cosmic-wallpaper/scripts/release.sh) and [`.github/workflows/release.yml`](../.github/workflows/release.yml).
-2. **KDE Store** only needs a quick drag-and-drop upload of the generated `.tar.gz` on your product page.
+2. **KDE Store** only needs a quick drag-and-drop upload of the generated `.tar.gz` on the product page.
 
 ---
 
 ## One-Time Setup on `store.kde.org`
 
-1. Package the archive and render store gallery screenshots:
+1. Package the archive and render store gallery screenshots (or run `./scripts/screenshot.sh --product` from the repo root to refresh screenshots on their own):
    ```bash
    cd plasma-cosmic-wallpaper
    ./scripts/package.sh --screenshots
    ```
    This builds:
    - `dist/com.reesedrjones.cosmicspace-1.0.0.tar.gz`
-   - `dist/screenshots/*.png` (6 crisp 1280×720 screenshots of all presets and custom color themes)
+   - `dist/screenshots/*.png` (6 crisp 1280×720 screenshots of all presets and custom color themes via [`scripts/screenshot.sh`](../scripts/screenshot.sh))
+
+   See [`docs/TESTING.md`](TESTING.md) for shader validation (`scripts/test-wallpaper.sh`) and single-shot debug renders (`scripts/screenshot.sh`).
 2. Sign in to [store.kde.org](https://store.kde.org/) (or opendesktop.org) with your GitHub account and click **Add Product**:
    - **Name**: `Cosmic Space & Plasma`
    - **Category**: **Plasma 6 Wallpaper Plugins**
