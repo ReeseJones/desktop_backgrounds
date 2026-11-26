@@ -39,14 +39,7 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-read -r PLUGIN_ID PLUGIN_VERSION < <(python3 - "$PKG_DIR/metadata.json" <<'PY'
-import json, sys
-with open(sys.argv[1], "r", encoding="utf-8") as f:
-    meta = json.load(f)
-kp = meta["KPlugin"]
-print(kp["Id"], kp["Version"])
-PY
-)
+read -r PLUGIN_ID PLUGIN_VERSION < <(python3 "$REPO_ROOT/scripts/metadata_tool.py" get "$PKG_DIR/metadata.json" --field id-version)
 
 if [[ -z "$PLUGIN_ID" || -z "$PLUGIN_VERSION" ]]; then
     echo "Error: Failed to extract KPlugin.Id and KPlugin.Version from $PKG_DIR/metadata.json" >&2
@@ -144,16 +137,13 @@ echo "Latest symlink/copy:      $LATEST_PATH"
 echo "SHA256 checksum:          $SHA_PATH"
 
 if [[ "$MAKE_SCREENSHOTS" -eq 1 ]]; then
-    if ! command -v qml6 >/dev/null 2>&1; then
-        echo "Error: qml6 not found in PATH for --screenshots." >&2
+    SCREENSHOT_SH="$REPO_ROOT/scripts/screenshot.sh"
+    if [[ ! -x "$SCREENSHOT_SH" ]]; then
+        echo "Error: Missing executable screenshot script: $SCREENSHOT_SH" >&2
         exit 1
     fi
     SHOT_DIR="$OUT_DIR/screenshots"
-    mkdir -p "$SHOT_DIR"
     echo "Rendering gallery screenshots into $SHOT_DIR..."
-    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl \
-        qml6 "$ROOT_DIR/scripts/render_preview.qml" -- --out-dir "$SHOT_DIR" --palette default
-    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=opengl \
-        qml6 "$ROOT_DIR/scripts/render_preview.qml" -- --out-dir "$SHOT_DIR" --palette custom
+    "$SCREENSHOT_SH" --target "$ROOT_DIR" --product --no-build --out-dir "$SHOT_DIR"
     echo "Screenshots saved in $SHOT_DIR"
 fi
