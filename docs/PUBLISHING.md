@@ -65,3 +65,7 @@ To keep publishing fast and foolproof:
    - Builds and verifies `dist/com.reesedrjones.cosmicspace-<version>.tar.gz` + `.sha256`
    - Commits `"Release v<version>"`, creates annotated tag `v<version>`, and pushes to GitHub (triggering GitHub Actions to publish the GitHub Release)
    - Opens your KDE Store edit page (`--open`) and prints the exact archive path to upload in the **Files** tab.
+4. On the KDE Store product edit page (`https://store.kde.org/p/<ID>/edit`), complete all three updates:
+   - **Update the file**: Upload `dist/com.reesedrjones.cosmicspace-<version>.tar.gz` under **Files**.
+   - **Update the version number**: Set the version on the product page/log to `<version>` so it matches `KPlugin.Version` and KDE's **Get New Plugins…** detects the update.
+   - **Update the changelog**: Add a new changelog entry summarizing the release.
