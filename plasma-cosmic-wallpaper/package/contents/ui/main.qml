@@ -119,6 +119,7 @@ WallpaperItem {
         colorPrimary: root.configColor(root.configuration.ColorPrimary, "#1038b8")
         colorSecondary: root.configColor(root.configuration.ColorSecondary, "#8c24e0")
         colorAccent: root.configColor(root.configuration.ColorAccent, "#0ee8ff")
+        rotateColors: Boolean(root.configuration.RotateColors ?? false)
         cycleHoldSeconds: Number(root.configuration.CycleHoldSeconds ?? 360)
         cycleBlendSeconds: Number(root.configuration.CycleBlendSeconds ?? 3)
         fpsLimit: Number(root.configuration.FpsLimit ?? 60)

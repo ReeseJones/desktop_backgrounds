@@ -73,6 +73,8 @@ Window {
     readonly property bool hasPresetFlag: win.hasCliArg("--preset")
     readonly property int customPreset: win.parsePresetValue(win.cliArg("--preset", "-1"))
     readonly property real customCycleTime: win.cliReal("--cycle-time", 0.0)
+    readonly property bool rotateColorsFlag: win.hasCliArg("--rotate-colors")
+    readonly property real customColorTime: win.cliReal("--color-time", 0.0)
     readonly property string customOutPath: win.cliArg("--out", "")
     readonly property string customBg: win.cliArg("--bg", "#06091c")
     readonly property string customPrimary: win.cliArg("--primary", "#1038b8")
@@ -196,6 +198,8 @@ Window {
         colorPrimary: win.jobs[win.currentStep].primary
         colorSecondary: win.jobs[win.currentStep].secondary
         colorAccent: win.jobs[win.currentStep].accent
+        rotateColors: win.hasPresetFlag ? win.rotateColorsFlag : false
+        initialColorTime: win.hasPresetFlag ? win.customColorTime : 0.0
         speed: 0.75
         starDensity: win.starsValue
         brightness: win.brightnessValue

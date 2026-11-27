@@ -21,6 +21,8 @@ STARS=""
 BALANCE=""
 OFFSET_X=""
 OFFSET_Y=""
+ROTATE_COLORS=0
+COLOR_TIME=""
 OUT_FILE=""
 OUT_DIR=""
 COMPAT_MODE=0
@@ -57,6 +59,8 @@ Debug Options (with --preset):
   --balance <num>            Override uColorBalance (-1.0 .. 1.0)
   --offset-x <num>           Override horizontal uOffset (-1.5 .. 1.5, 1.0 = right edge)
   --offset-y <num>           Override vertical uOffset (-1.5 .. 1.5, 1.0 = top edge)
+  --rotate-colors            Enable continuous hue rotation (with --preset)
+  --color-time <sec>         Color rotation clock time in seconds (default: 0.0)
   --out <file.png>           Exact output path (single render only)
   --out-dir <dir>            Output directory override
   -h, --help                 Show this help message
@@ -170,6 +174,15 @@ while [[ $# -gt 0 ]]; do
         --offset-y)
             require_arg "$@"
             OFFSET_Y="$2"
+            shift 2
+            ;;
+        --rotate-colors)
+            ROTATE_COLORS=1
+            shift
+            ;;
+        --color-time)
+            require_arg "$@"
+            COLOR_TIME="$2"
             shift 2
             ;;
         --out)
@@ -341,6 +354,8 @@ if [[ -n "$PRESET" ]]; then
     [[ -n "$BALANCE" ]] && QML_ARGS+=(--balance "$BALANCE")
     [[ -n "$OFFSET_X" ]] && QML_ARGS+=(--offset-x "$OFFSET_X")
     [[ -n "$OFFSET_Y" ]] && QML_ARGS+=(--offset-y "$OFFSET_Y")
+    [[ "$ROTATE_COLORS" -eq 1 ]] && QML_ARGS+=(--rotate-colors)
+    [[ -n "$COLOR_TIME" ]] && QML_ARGS+=(--color-time "$COLOR_TIME")
     [[ -n "$OUT_FILE" ]] && QML_ARGS+=(--out "$OUT_FILE")
 else
     QML_ARGS+=(--palette "$SUITE")

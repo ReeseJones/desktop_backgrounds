@@ -27,18 +27,41 @@ Item {
     property real cycleBlendSeconds: 3.0
     property real initialCycleTime: 0.0
     property real cycleClock: initialCycleTime
+    property bool rotateColors: false
+    property real colorCyclePeriodSeconds: 0.0
+    property real initialColorTime: 0.0
+    property real colorClock: initialColorTime
 
     readonly property var shaderUrls: [
         Qt.resolvedUrl("../shaders/cosmic_nebula.frag.qsb"),
         Qt.resolvedUrl("../shaders/event_horizon.frag.qsb"),
         Qt.resolvedUrl("../shaders/deep_aurora.frag.qsb")
     ]
+    readonly property int sceneCount: shaderUrls.length
 
     readonly property real dpr: (Screen.devicePixelRatio > 0) ? Screen.devicePixelRatio : 1.0
     readonly property bool autoCycle: preset < 0
     readonly property real slotHold: Math.max(1.0, cycleHoldSeconds)
     readonly property real slotBlend: Math.max(0.0, cycleBlendSeconds)
     readonly property real slotDuration: slotHold + slotBlend
+    // One major hue step (60 deg, 1/6 turn) per ~1.131x full background cycle (irrational
+    // Math.SQRT2 * 0.8 desync factor) so (scene, color) pairings never repeat identically.
+    readonly property real colorDesyncFactor: Math.SQRT2 * 0.8
+    readonly property real fullSceneCycleSeconds: slotDuration * sceneCount
+    readonly property real defaultColorCyclePeriodSeconds: fullSceneCycleSeconds * 6.0 * colorDesyncFactor
+    readonly property real effectiveColorCyclePeriod: colorCyclePeriodSeconds > 0.001
+                                                      ? colorCyclePeriodSeconds
+                                                      : defaultColorCyclePeriodSeconds
+    readonly property real clampedColorClock: Math.max(0.0, colorClock)
+    readonly property real colorHueShiftTurns: rotateColors && effectiveColorCyclePeriod > 0.001
+                                               ? ((clampedColorClock / effectiveColorCyclePeriod) % 1.0)
+                                               : 0.0
+
+    readonly property color effectiveColorBg: root.shiftColorHue(root.colorBg, root.colorHueShiftTurns)
+    readonly property color effectiveColorPrimary: root.shiftColorHue(root.colorPrimary, root.colorHueShiftTurns)
+    readonly property color effectiveColorSecondary: root.shiftColorHue(root.colorSecondary, root.colorHueShiftTurns)
+    readonly property color effectiveColorAccent: root.shiftColorHue(root.colorAccent, root.colorHueShiftTurns)
+
     readonly property real clampedCycleClock: Math.max(0.0, cycleClock)
     readonly property int cycleSlot: Math.floor(clampedCycleClock / slotDuration)
     readonly property real inSlot: clampedCycleClock - cycleSlot * slotDuration
@@ -61,7 +84,15 @@ Item {
 
     readonly property bool isTransitioning: activeBlend > 0.0005
     readonly property bool needsHighFps: visible && !paused && (speed > 0.001 || isTransitioning)
-    readonly property bool needsLowFpsCycleTick: visible && !paused && autoCycle && !needsHighFps
+    readonly property bool needsLowFpsCycleTick: visible && !paused && (autoCycle || rotateColors) && !needsHighFps
+
+    function shiftColorHue(baseColor: color, hueTurns: real): color {
+        if (Math.abs(hueTurns) < 0.00001 || baseColor.hslHue < 0.0 || baseColor.hslSaturation <= 0.0001) {
+            return baseColor;
+        }
+        const shiftedHue = ((baseColor.hslHue + hueTurns) % 1.0 + 1.0) % 1.0;
+        return Qt.hsla(shiftedHue, baseColor.hslSaturation, baseColor.hslLightness, baseColor.a);
+    }
 
     function clampSceneIndex(idx) {
         return Math.max(0, Math.min(shaderUrls.length - 1, idx));
@@ -81,6 +112,9 @@ Item {
         if (autoCycle) {
             cycleClock += dt;
         }
+        if (rotateColors) {
+            colorClock += dt;
+        }
     }
 
     onInitialTimeChanged: {
@@ -89,6 +123,16 @@ Item {
 
     onInitialCycleTimeChanged: {
         cycleClock = initialCycleTime;
+    }
+
+    onInitialColorTimeChanged: {
+        colorClock = initialColorTime;
+    }
+
+    onRotateColorsChanged: {
+        if (!rotateColors) {
+            colorClock = initialColorTime;
+        }
     }
 
     onPausedChanged: {
@@ -162,7 +206,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: root.colorBg
+        color: root.effectiveColorBg
     }
 
     ShaderEffect {
@@ -178,10 +222,10 @@ Item {
             Math.max(1.0, width * root.dpr),
             Math.max(1.0, height * root.dpr)
         )
-        readonly property color uColorBg: root.colorBg
-        readonly property color uColorPrimary: root.colorPrimary
-        readonly property color uColorSecondary: root.colorSecondary
-        readonly property color uColorAccent: root.colorAccent
+        readonly property color uColorBg: root.effectiveColorBg
+        readonly property color uColorPrimary: root.effectiveColorPrimary
+        readonly property color uColorSecondary: root.effectiveColorSecondary
+        readonly property color uColorAccent: root.effectiveColorAccent
         readonly property vector2d uOffset: Qt.vector2d(root.offsetX, root.offsetY)
 
         fragmentShader: root.shaderUrls[root.activeBaseIndex]
@@ -208,10 +252,10 @@ Item {
             Math.max(1.0, width * root.dpr),
             Math.max(1.0, height * root.dpr)
         )
-        readonly property color uColorBg: root.colorBg
-        readonly property color uColorPrimary: root.colorPrimary
-        readonly property color uColorSecondary: root.colorSecondary
-        readonly property color uColorAccent: root.colorAccent
+        readonly property color uColorBg: root.effectiveColorBg
+        readonly property color uColorPrimary: root.effectiveColorPrimary
+        readonly property color uColorSecondary: root.effectiveColorSecondary
+        readonly property color uColorAccent: root.effectiveColorAccent
         readonly property vector2d uOffset: Qt.vector2d(root.offsetX, root.offsetY)
 
         fragmentShader: root.shaderUrls[root.activeNextIndex]
@@ -270,7 +314,12 @@ Item {
             const now = Date.now();
             const dt = Math.min(Math.max((now - lastTickMs) / 1000.0, 0.0), 1.0);
             lastTickMs = now;
-            root.cycleClock += dt;
+            if (root.autoCycle) {
+                root.cycleClock += dt;
+            }
+            if (root.rotateColors) {
+                root.colorClock += dt;
+            }
         }
     }
 }

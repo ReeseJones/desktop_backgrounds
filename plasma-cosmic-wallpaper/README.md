@@ -19,6 +19,7 @@ A native GPU-accelerated KDE Plasma 6 live wallpaper plugin featuring three proc
   - **Primary Glow** (`#1038b8` default)
   - **Secondary Glow** (`#8c24e0` default)
   - **Plasma Highlight** (`#0ee8ff` default)
+- **Color Rotation** (*Rotate colors slowly over time* — continuous hue shift across all four palette colors, desynced from scene cycling and working with both premade and custom palettes)
 - **Animation Speed** (`0%–200%`)
 - **Star Density** (`20%–200%`)
 - **Brightness** (`50%–150%`)

@@ -58,6 +58,10 @@
       <label>Plasma highlight and ionized core color</label>
       <default>#0ee8ff</default>
     </entry>
+    <entry name="RotateColors" type="Bool">
+      <label>Slowly rotate palette colors over time</label>
+      <default>false</default>
+    </entry>
     <entry name="FpsLimit" type="Int">
       <label>Frame rate cap (30, 60, or 0 for VSync)</label>
       <default>60</default>

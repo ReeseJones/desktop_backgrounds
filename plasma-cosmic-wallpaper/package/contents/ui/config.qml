@@ -43,6 +43,8 @@ Kirigami.FormLayout {
     property color cfg_ColorSecondaryDefault: "#8c24e0"
     property color cfg_ColorAccent: "#0ee8ff"
     property color cfg_ColorAccentDefault: "#0ee8ff"
+    property bool cfg_RotateColors: false
+    property bool cfg_RotateColorsDefault: false
     property int cfg_FpsLimit: 60
     property int cfg_FpsLimitDefault: 60
     property bool cfg_PauseWhenMaximized: true
@@ -184,6 +186,11 @@ Kirigami.FormLayout {
         return qsTr("%1 s").arg(s);
     }
 
+    function desktopMajorColorStepSeconds() {
+        const slot = Math.max(1, root.cfg_CycleHoldSeconds) + Math.max(0, root.cfg_CycleBlendSeconds);
+        return slot * previewShaderView.sceneCount * previewShaderView.colorDesyncFactor;
+    }
+
     function clampOffsetPercent(val) {
         return Math.max(-150, Math.min(150, Math.round(val)));
     }
@@ -230,6 +237,7 @@ Kirigami.FormLayout {
             clip: true
 
             CosmicShaderView {
+                id: previewShaderView
                 anchors.fill: parent
                 anchors.margins: 1
                 preset: root.cfg_Preset
@@ -243,6 +251,8 @@ Kirigami.FormLayout {
                 colorPrimary: root.cfg_ColorPrimary
                 colorSecondary: root.cfg_ColorSecondary
                 colorAccent: root.cfg_ColorAccent
+                rotateColors: root.cfg_RotateColors
+                colorCyclePeriodSeconds: root.cfg_RotateColors ? 36.0 : 0.0
                 cycleHoldSeconds: root.cfg_Preset < 0 ? Math.min(root.cfg_CycleHoldSeconds, 5) : root.cfg_CycleHoldSeconds
                 cycleBlendSeconds: root.cfg_CycleBlendSeconds
                 fpsLimit: 30
@@ -377,6 +387,16 @@ Kirigami.FormLayout {
             opacity: 0.72
             text: qsTr("Live preview holds 5 s so you can preview transitions (desktop uses %1).")
                   .arg(root.formatDuration(root.cfg_CycleHoldSeconds))
+        }
+
+        QQC2.Label {
+            visible: root.cfg_RotateColors
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            opacity: 0.72
+            text: qsTr("Live preview rotates colors quickly (desktop shifts smoothly by ~1 major color every %1, desynced from scene cycling).")
+                  .arg(root.formatDuration(root.desktopMajorColorStepSeconds()))
         }
     }
 
@@ -552,6 +572,16 @@ Kirigami.FormLayout {
                 text: qsTr("Plasma Highlight (%1)").arg(root.cfg_ColorAccent.toString())
                 Layout.fillWidth: true
             }
+        }
+    }
+
+    QQC2.CheckBox {
+        id: rotateColorsCheck
+        Kirigami.FormData.label: qsTr("Color Rotation:")
+        text: qsTr("Rotate colors slowly over time")
+        checked: root.cfg_RotateColors
+        onToggled: {
+            root.cfg_RotateColors = checked;
         }
     }
 
@@ -808,6 +838,7 @@ Kirigami.FormLayout {
             root.cfg_ColorPrimary = root.cfg_ColorPrimaryDefault;
             root.cfg_ColorSecondary = root.cfg_ColorSecondaryDefault;
             root.cfg_ColorAccent = root.cfg_ColorAccentDefault;
+            root.cfg_RotateColors = root.cfg_RotateColorsDefault;
             root.cfg_FpsLimit = root.cfg_FpsLimitDefault;
             root.cfg_PauseWhenMaximized = root.cfg_PauseWhenMaximizedDefault;
         }
